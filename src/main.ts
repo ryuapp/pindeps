@@ -39,6 +39,15 @@ function detectPackageManager():
   return null;
 }
 
+function getLockFileName(): string | null {
+  if (existsSync("deno.lock")) return "deno.lock";
+  if (existsSync("bun.lock")) return "bun.lock";
+  if (existsSync("pnpm-lock.yaml")) return "pnpm-lock.yaml";
+  if (existsSync("yarn.lock")) return "yarn.lock";
+  if (existsSync("package-lock.json")) return "package-lock.json";
+  return null;
+}
+
 function getLockedVersions(): Map<string, string> {
   const packageManager = detectPackageManager();
 
@@ -100,10 +109,10 @@ function pinDependencies(
       const lockedVersion = lockedVersions.get(name);
       if (lockedVersion) {
         pinned[name] = lockedVersion;
-        console.log(`📌 Pinned ${name}: ${version} → ${lockedVersion}`);
+        console.log(`   ${name}: ${version} -> ${lockedVersion}`);
       } else {
         pinned[name] = version;
-        console.log(`⚠️  Skipped ${name}: no locked version found`);
+        console.log(`⚠️ ${name}: no locked version found`);
       }
     } else {
       pinned[name] = version;
@@ -182,9 +191,9 @@ function main() {
         "   Please run 'npm/yarn/pnpm/bun install' or 'deno cache' first",
       );
     } else {
-      const packageManager = detectPackageManager();
+      const lockFileName = getLockFileName();
       console.log(
-        `✅ Found ${packageManager} lock file with ${lockedVersions.size} packages`,
+        `📦 Found ${lockedVersions.size} dependencies in ${lockFileName}`,
       );
     }
 
@@ -192,7 +201,7 @@ function main() {
 
     // Process each package.json file
     for (const packageJsonPath of packageJsonFiles) {
-      console.log(`\n📄 Processing ${packageJsonPath}...`);
+      console.log(`\n${packageJsonPath}:`);
 
       const packageJson: PackageJson = JSON.parse(
         readFileSync(packageJsonPath, "utf8"),
@@ -200,7 +209,7 @@ function main() {
 
       let hasChanges = false;
 
-      // Process each dependency type
+      // Process all dependency types
       const depTypes: Array<keyof PackageJson> = [
         "dependencies",
         "devDependencies",
@@ -212,7 +221,6 @@ function main() {
 
       for (const depType of depTypes) {
         if (packageJson[depType]) {
-          console.log(`  📦 Processing ${depType}...`);
           const pinned = pinDependencies(
             packageJson[depType] as Record<string, string>,
             lockedVersions,
@@ -231,10 +239,7 @@ function main() {
           packageJsonPath,
           JSON.stringify(packageJson, null, 2) + "\n",
         );
-        console.log(`  ✅ ${packageJsonPath} updated!`);
         totalChanges = true;
-      } else {
-        console.log(`  ✅ ${packageJsonPath} already pinned!`);
       }
     }
 
@@ -244,7 +249,7 @@ function main() {
         "   Run your package manager install command to update the lock file",
       );
     } else {
-      console.log("\n✅ All dependencies are already pinned!");
+      console.log("\n📌 All dependencies are already pinned!");
     }
   } catch (error) {
     console.error("❌ Error:", error instanceof Error ? error.message : error);
