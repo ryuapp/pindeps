@@ -8,7 +8,9 @@ const YarnLockFileSchema = v.record(
     v.object({
       version: v.optional(v.string()),
       resolution: v.optional(v.string()),
-      dependencies: v.optional(v.record(v.string(), v.string())),
+      dependencies: v.optional(
+        v.record(v.string(), v.union([v.string(), v.number()])),
+      ),
       checksum: v.optional(v.string()),
       languageName: v.optional(v.string()),
       linkType: v.optional(v.string()),
@@ -16,7 +18,7 @@ const YarnLockFileSchema = v.record(
     }),
     v.object({
       version: v.number(),
-      cacheKey: v.string(),
+      cacheKey: v.union([v.string(), v.number()]),
     }),
     v.undefined_(),
   ]),
