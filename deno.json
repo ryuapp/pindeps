@@ -8,7 +8,9 @@
   },
   "nodeModulesDir": "none",
   "imports": {
-    "@std/assert": "jsr:@std/assert@1.0.14"
+    "@std/assert": "jsr:@std/assert@1.0.14",
+    "@std/yaml": "jsr:@std/yaml@1.0.9",
+    "@std/jsonc": "jsr:@std/jsonc@1.0.2"
   },
   "exclude": [
     "test/fixtures/*"

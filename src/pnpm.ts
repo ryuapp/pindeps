@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml } from "@std/yaml";
 
 interface PnpmLockFile {
   lockfileVersion?: string | number;
@@ -17,7 +17,13 @@ interface PnpmLockFile {
 export function parsePnpmLock(lockFilePath: string): Map<string, string> {
   const versions = new Map<string, string>();
   const content = readFileSync(lockFilePath, "utf8");
-  const lockFile = parseYaml(content) as PnpmLockFile;
+  const parsed = parseYaml(content);
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Invalid pnpm-lock.yaml file");
+  }
+
+  const lockFile = parsed as unknown as PnpmLockFile;
 
   // Handle root dependencies
   const processDeps = (deps?: Record<string, { version: string } | string>) => {
