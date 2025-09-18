@@ -1,14 +1,13 @@
-name: Publish Package
+name: ci
 on:
-  release:
-    types: [published]
-
-permissions:
-  id-token: write
-  contents: read
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions: {}
 
 jobs:
-  publish:
+  ci:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -29,8 +28,3 @@ jobs:
         run: deno test -RE
       - name: TypeCheck
         run: deno check .
-
-      - name: Update npm
-        run: npm install -g npm@latest
-      - name: Publish to npm
-        run: npm publish
