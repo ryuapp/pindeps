@@ -6,9 +6,5 @@
   "repository": "ryuapp/pindeps",
   "type": "module",
   "bin": "./bin",
-  "files": ["bin"],
-  "devDependencies": {
-    "jsonc-parser": "3.3.1",
-    "yaml": "2.8.1"
-  }
+  "files": ["bin"]
 }

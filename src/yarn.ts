@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { parse as parseYaml } from "yaml";
+import { parse as parseYaml } from "@std/yaml";
 
 interface YarnLockFile {
   __metadata?: {
@@ -23,7 +23,13 @@ interface YarnLockFile {
 export function parseYarnLock(lockFilePath: string): Map<string, string> {
   const versions = new Map<string, string>();
   const content = readFileSync(lockFilePath, "utf8");
-  const lockFile = parseYaml(content) as YarnLockFile;
+  const parsed = parseYaml(content);
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Invalid yarn.lock file");
+  }
+
+  const lockFile = parsed as unknown as YarnLockFile;
 
   for (const [key, packageInfo] of Object.entries(lockFile)) {
     // Skip metadata and undefined entries

@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { parse as parseJsonc } from "jsonc-parser";
+import { parse as parseJsonc } from "@std/jsonc";
 
 interface BunLockFile {
   lockfileVersion: number;
@@ -14,7 +14,13 @@ interface BunLockFile {
 export function parseBunLock(lockFilePath: string): Map<string, string> {
   const versions = new Map<string, string>();
   const content = readFileSync(lockFilePath, "utf8");
-  const lockFile: BunLockFile = parseJsonc(content);
+  const parsed = parseJsonc(content);
+
+  if (!parsed || typeof parsed !== "object") {
+    throw new Error("Invalid bun.lock file");
+  }
+
+  const lockFile = parsed as unknown as BunLockFile;
 
   // Parse from packages section to get exact versions
   // The packages section contains the resolved versions, not the workspace ranges
@@ -24,7 +30,7 @@ export function parseBunLock(lockFilePath: string): Map<string, string> {
     ) {
       if (Array.isArray(packageInfo) && packageInfo.length > 0) {
         // First element in array is the specifier like "yaml@2.8.1"
-        const specifier = packageInfo[0] as string;
+        const specifier = String(packageInfo[0]);
 
         // Only process if packageName matches the package name in specifier exactly
         // Handle @scope/package@version format
