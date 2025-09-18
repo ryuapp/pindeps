@@ -5,10 +5,10 @@
   "license": "MIT",
   "repository": "ryuapp/pindeps",
   "type": "module",
-  "bin": "./src/main.ts",
-  "files": ["src"],
-  "dependencies": {
-    "jsonc-parser": "^3.3.1",
-    "yaml": "^2.8.1"
+  "bin": "./bin",
+  "files": ["bin"],
+  "devDependencies": {
+    "jsonc-parser": "3.3.1",
+    "yaml": "2.8.1"
   }
 }
