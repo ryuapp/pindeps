@@ -1,15 +1,42 @@
 import { readFileSync } from "node:fs";
+import * as v from "@valibot/valibot";
 
-interface NpmLockFile {
-  lockfileVersion?: number;
-  dependencies?: Record<string, { version: string }>;
-  packages?: Record<string, { version?: string }>;
-}
+const NpmLockFileSchema = v.object({
+  lockfileVersion: v.optional(v.number()),
+  dependencies: v.optional(
+    v.record(
+      v.string(),
+      v.object({
+        version: v.string(),
+      }),
+    ),
+  ),
+  packages: v.optional(
+    v.record(
+      v.string(),
+      v.object({
+        version: v.optional(v.string()),
+        resolved: v.optional(v.string()),
+        link: v.optional(v.boolean()),
+      }),
+    ),
+  ),
+});
 
 export function parseNpmLock(lockFilePath: string): Map<string, string> {
   const versions = new Map<string, string>();
   const content = readFileSync(lockFilePath, "utf8");
-  const lockFile: NpmLockFile = JSON.parse(content);
+
+  const parsed = JSON.parse(content);
+  const result = v.safeParse(NpmLockFileSchema, parsed);
+
+  if (!result.success) {
+    throw new Error(
+      `Invalid package-lock.json format: ${v.flatten(result.issues)}`,
+    );
+  }
+
+  const lockFile = result.output;
 
   // npm v7+ (lockfileVersion 2 or 3)
   if (lockFile.packages) {

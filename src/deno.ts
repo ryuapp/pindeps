@@ -1,26 +1,44 @@
 import { readFileSync } from "node:fs";
+import * as v from "@valibot/valibot";
 
-interface DenoLockFile {
-  version?: string;
-  specifiers?: Record<string, string>;
-  npm?: Record<string, {
-    integrity: string;
-    dependencies?: Record<string, string>;
-    bin?: boolean;
-  }>;
-  workspace?: {
-    packageJson?: {
-      dependencies?: string[];
-      devDependencies?: string[];
-    };
-  };
-  remote?: Record<string, string>;
-}
+const DenoLockFileSchema = v.object({
+  version: v.optional(v.string()),
+  specifiers: v.optional(v.record(v.string(), v.string())),
+  npm: v.optional(
+    v.record(
+      v.string(),
+      v.object({
+        integrity: v.string(),
+        dependencies: v.optional(v.record(v.string(), v.string())),
+        bin: v.optional(v.boolean()),
+      }),
+    ),
+  ),
+  workspace: v.optional(
+    v.object({
+      packageJson: v.optional(
+        v.object({
+          dependencies: v.optional(v.array(v.string())),
+          devDependencies: v.optional(v.array(v.string())),
+        }),
+      ),
+    }),
+  ),
+  remote: v.optional(v.record(v.string(), v.string())),
+});
 
 export function parseDenoLock(lockFilePath: string): Map<string, string> {
   const versions = new Map<string, string>();
   const content = readFileSync(lockFilePath, "utf8");
-  const lockFile: DenoLockFile = JSON.parse(content);
+
+  const parsed = JSON.parse(content);
+  const result = v.safeParse(DenoLockFileSchema, parsed);
+
+  if (!result.success) {
+    throw new Error(`Invalid deno.lock format: ${v.flatten(result.issues)}`);
+  }
+
+  const lockFile = result.output;
 
   // Parse npm packages from the npm section
   if (lockFile.npm) {
