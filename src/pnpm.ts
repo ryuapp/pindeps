@@ -1,18 +1,54 @@
 import { readFileSync } from "node:fs";
 import { parse as parseYaml } from "@std/yaml";
+import * as v from "@valibot/valibot";
 
-interface PnpmLockFile {
-  lockfileVersion?: string | number;
-  importers?: Record<string, {
-    dependencies?: Record<string, { version: string } | string>;
-    devDependencies?: Record<string, { version: string } | string>;
-    optionalDependencies?: Record<string, { version: string } | string>;
-  }>;
-  dependencies?: Record<string, { version: string } | string>;
-  devDependencies?: Record<string, { version: string } | string>;
-  optionalDependencies?: Record<string, { version: string } | string>;
-  packages?: Record<string, unknown>;
-}
+const PnpmLockFileSchema = v.object({
+  lockfileVersion: v.optional(v.union([v.string(), v.number()])),
+  importers: v.optional(
+    v.record(
+      v.string(),
+      v.object({
+        dependencies: v.optional(
+          v.record(
+            v.string(),
+            v.union([v.string(), v.object({ version: v.string() })]),
+          ),
+        ),
+        devDependencies: v.optional(
+          v.record(
+            v.string(),
+            v.union([v.string(), v.object({ version: v.string() })]),
+          ),
+        ),
+        optionalDependencies: v.optional(
+          v.record(
+            v.string(),
+            v.union([v.string(), v.object({ version: v.string() })]),
+          ),
+        ),
+      }),
+    ),
+  ),
+  dependencies: v.optional(
+    v.record(
+      v.string(),
+      v.union([v.string(), v.object({ version: v.string() })]),
+    ),
+  ),
+  devDependencies: v.optional(
+    v.record(
+      v.string(),
+      v.union([v.string(), v.object({ version: v.string() })]),
+    ),
+  ),
+  optionalDependencies: v.optional(
+    v.record(
+      v.string(),
+      v.union([v.string(), v.object({ version: v.string() })]),
+    ),
+  ),
+  packages: v.optional(v.record(v.string(), v.unknown())),
+});
 
 export function parsePnpmLock(lockFilePath: string): Map<string, string> {
   const versions = new Map<string, string>();
@@ -23,7 +59,15 @@ export function parsePnpmLock(lockFilePath: string): Map<string, string> {
     throw new Error("Invalid pnpm-lock.yaml file");
   }
 
-  const lockFile = parsed as unknown as PnpmLockFile;
+  const result = v.safeParse(PnpmLockFileSchema, parsed);
+
+  if (!result.success) {
+    throw new Error(
+      `Invalid pnpm-lock.yaml format: ${v.flatten(result.issues)}`,
+    );
+  }
+
+  const lockFile = result.output;
 
   // Handle root dependencies
   const processDeps = (deps?: Record<string, { version: string } | string>) => {
