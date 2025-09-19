@@ -8,6 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
+import { styleText } from "node:util";
 import process from "node:process";
 import { parseNpmLock } from "./npm.ts";
 import { parseYarnLock } from "./yarn.ts";
@@ -101,6 +102,8 @@ function shouldPin(version: string): boolean {
 function pinDependencies(
   deps: Record<string, string>,
   lockedVersions: Map<string, string>,
+  maxNameLength: number,
+  maxVersionLength: number,
 ): Record<string, string> {
   const pinned: Record<string, string> = {};
 
@@ -109,7 +112,11 @@ function pinDependencies(
       const lockedVersion = lockedVersions.get(name);
       if (lockedVersion) {
         pinned[name] = lockedVersion;
-        console.log(`   ${name}: ${version} -> ${lockedVersion}`);
+        const paddedName = name.padEnd(maxNameLength);
+        const paddedVersion = version.padEnd(maxVersionLength);
+        const oldVersion = styleText("gray", paddedVersion);
+        const newVersion = styleText("green", lockedVersion);
+        console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
       } else {
         pinned[name] = version;
         console.log(`⚠️ ${name}: no locked version found`);
@@ -197,15 +204,46 @@ function main() {
       );
     }
 
-    let totalChanges = false;
+    // Calculate max package name and version length across all package.json files for alignment
+    let maxNameLength = 0;
+    let maxVersionLength = 0;
+    const packageJsonContents: Array<{ path: string; json: PackageJson }> = [];
 
-    // Process each package.json file
     for (const packageJsonPath of packageJsonFiles) {
-      console.log(`\n${packageJsonPath}:`);
-
       const packageJson: PackageJson = JSON.parse(
         readFileSync(packageJsonPath, "utf8"),
       );
+      packageJsonContents.push({ path: packageJsonPath, json: packageJson });
+
+      const depTypes: Array<keyof PackageJson> = [
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "optionalDependencies",
+        "overrides",
+        "resolutions",
+      ];
+
+      for (const depType of depTypes) {
+        if (packageJson[depType]) {
+          const deps = packageJson[depType] as Record<string, string>;
+          for (const [name, version] of Object.entries(deps)) {
+            maxNameLength = Math.max(maxNameLength, name.length);
+            if (shouldPin(version)) {
+              maxVersionLength = Math.max(maxVersionLength, version.length);
+            }
+          }
+        }
+      }
+    }
+
+    let totalChanges = false;
+
+    // Process each package.json file
+    for (
+      const { path: packageJsonPath, json: packageJson } of packageJsonContents
+    ) {
+      console.log(`\n${packageJsonPath}:`);
 
       let hasChanges = false;
 
@@ -224,6 +262,8 @@ function main() {
           const pinned = pinDependencies(
             packageJson[depType] as Record<string, string>,
             lockedVersions,
+            maxNameLength,
+            maxVersionLength,
           );
 
           if (JSON.stringify(pinned) !== JSON.stringify(packageJson[depType])) {
