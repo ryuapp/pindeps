@@ -187,20 +187,11 @@ function main() {
     }
 
     // Get locked versions from lock file
-    console.log("🔍 Analyzing lock file...");
     const lockedVersions = getLockedVersions();
 
     if (lockedVersions.size === 0) {
       console.log(
-        "⚠️  Warning: No lock file found or unable to parse lock file",
-      );
-      console.log(
-        "   Please run 'npm/yarn/pnpm/bun install' or 'deno cache' first",
-      );
-    } else {
-      const lockFileName = getLockFileName();
-      console.log(
-        `📦 Found ${lockedVersions.size} dependencies in ${lockFileName}`,
+        "⚠️  Warning: No lock file found or unable to parse lock file\n",
       );
     }
 
@@ -237,15 +228,48 @@ function main() {
       }
     }
 
+    // Check if there will be any changes across all package.json files
+    let willHaveAnyChanges = false;
+    for (const { json: packageJson } of packageJsonContents) {
+      const depTypes: Array<keyof PackageJson> = [
+        "dependencies",
+        "devDependencies",
+        "peerDependencies",
+        "optionalDependencies",
+        "overrides",
+        "resolutions",
+      ];
+
+      for (const depType of depTypes) {
+        if (packageJson[depType]) {
+          const deps = packageJson[depType] as Record<string, string>;
+          const hasChanges = Object.entries(deps).some(([name, version]) => {
+            return shouldPin(version) && lockedVersions.has(name);
+          });
+          if (hasChanges) {
+            willHaveAnyChanges = true;
+            break;
+          }
+        }
+      }
+      if (willHaveAnyChanges) break;
+    }
+
+    if (willHaveAnyChanges) {
+      const lockFileName = getLockFileName();
+      console.log(
+        `📦 Found ${lockedVersions.size} dependencies in ${lockFileName}`,
+      );
+    }
+
     let totalChanges = false;
 
     // Process each package.json file
     for (
       const { path: packageJsonPath, json: packageJson } of packageJsonContents
     ) {
-      console.log(`\n${packageJsonPath}:`);
-
       let hasChanges = false;
+      let hasOutput = false;
 
       // Process all dependency types
       const depTypes: Array<keyof PackageJson> = [
@@ -259,14 +283,28 @@ function main() {
 
       for (const depType of depTypes) {
         if (packageJson[depType]) {
+          const originalDeps = packageJson[depType] as Record<string, string>;
+
+          // Check if any dependencies will be pinned before processing
+          const willHaveChanges = Object.entries(originalDeps).some(
+            ([name, version]) => {
+              return shouldPin(version) && lockedVersions.has(name);
+            },
+          );
+
+          if (willHaveChanges && !hasOutput) {
+            console.log(`\n${packageJsonPath}:`);
+            hasOutput = true;
+          }
+
           const pinned = pinDependencies(
-            packageJson[depType] as Record<string, string>,
+            originalDeps,
             lockedVersions,
             maxNameLength,
             maxVersionLength,
           );
 
-          if (JSON.stringify(pinned) !== JSON.stringify(packageJson[depType])) {
+          if (JSON.stringify(pinned) !== JSON.stringify(originalDeps)) {
             (packageJson as Record<string, Record<string, string>>)[depType] =
               pinned;
             hasChanges = true;
@@ -284,12 +322,17 @@ function main() {
     }
 
     if (totalChanges) {
-      console.log("\n✅ Dependencies pinned successfully!");
+      console.log("\n📌 Dependencies pinned successfully!");
+      const lockFileName = getLockFileName();
+      const packageManager = detectPackageManager();
+      const installCommand = packageManager === "yarn"
+        ? "yarn"
+        : `${packageManager} install`;
       console.log(
-        "   Run your package manager install command to update the lock file",
+        `   Run \`${installCommand}\` to update ${lockFileName}.`,
       );
     } else {
-      console.log("\n📌 All dependencies are already pinned!");
+      console.log("📌 All dependencies are already pinned!");
     }
   } catch (error) {
     console.error("❌ Error:", error instanceof Error ? error.message : error);
