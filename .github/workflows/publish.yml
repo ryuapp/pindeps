@@ -27,4 +27,4 @@ jobs:
       - name: Build
         run: deno task build
       - name: Publish to npm
-        run: deno -A npm:npm@latest publish
+        run: deno -A npm:npm@latest --publish
