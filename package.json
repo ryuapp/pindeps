@@ -1,6 +1,6 @@
 {
   "name": "pindeps",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Pin versions of dependencies",
   "license": "MIT",
   "repository": "ryuapp/pindeps",
