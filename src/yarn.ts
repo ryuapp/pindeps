@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { parse as parseYaml } from "@std/yaml";
 import * as v from "@valibot/valibot";
 
@@ -24,9 +23,8 @@ const YarnLockFileSchema = v.record(
   ]),
 );
 
-export function parseYarnLock(lockFilePath: string): Map<string, string> {
+export function parseYarnLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const content = readFileSync(lockFilePath, "utf8");
   const parsed = parseYaml(content);
 
   if (!parsed || typeof parsed !== "object") {

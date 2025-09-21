@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import * as v from "@valibot/valibot";
 
 const DenoLockFileSchema = v.object({
@@ -27,9 +26,8 @@ const DenoLockFileSchema = v.object({
   remote: v.optional(v.record(v.string(), v.string())),
 });
 
-export function parseDenoLock(lockFilePath: string): Map<string, string> {
+export function parseDenoLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const content = readFileSync(lockFilePath, "utf8");
 
   const parsed = JSON.parse(content);
   const result = v.safeParse(DenoLockFileSchema, parsed);

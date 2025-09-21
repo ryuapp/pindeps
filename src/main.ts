@@ -55,27 +55,32 @@ function getLockedVersions(): Map<string, string> {
   switch (packageManager) {
     case "deno":
       if (existsSync("deno.lock")) {
-        return parseDenoLock("deno.lock");
+        const content = readFileSync("deno.lock", "utf8");
+        return parseDenoLock(content);
       }
       break;
     case "bun":
       if (existsSync("bun.lock")) {
-        return parseBunLock("bun.lock");
+        const content = readFileSync("bun.lock", "utf8");
+        return parseBunLock(content);
       }
       break;
     case "yarn":
       if (existsSync("yarn.lock")) {
-        return parseYarnLock("yarn.lock");
+        const content = readFileSync("yarn.lock", "utf8");
+        return parseYarnLock(content);
       }
       break;
     case "npm":
       if (existsSync("package-lock.json")) {
-        return parseNpmLock("package-lock.json");
+        const content = readFileSync("package-lock.json", "utf8");
+        return parseNpmLock(content);
       }
       break;
     case "pnpm":
       if (existsSync("pnpm-lock.yaml")) {
-        return parsePnpmLock("pnpm-lock.yaml");
+        const content = readFileSync("pnpm-lock.yaml", "utf8");
+        return parsePnpmLock(content);
       }
       break;
   }

@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import * as v from "@valibot/valibot";
 
 const NpmLockFileSchema = v.object({
@@ -23,9 +22,8 @@ const NpmLockFileSchema = v.object({
   ),
 });
 
-export function parseNpmLock(lockFilePath: string): Map<string, string> {
+export function parseNpmLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const content = readFileSync(lockFilePath, "utf8");
 
   const parsed = JSON.parse(content);
   const result = v.safeParse(NpmLockFileSchema, parsed);

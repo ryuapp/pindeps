@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { parse as parseJsonc } from "@std/jsonc";
 import * as v from "@valibot/valibot";
 
@@ -19,9 +18,8 @@ const BunLockFileSchema = v.object({
   ),
 });
 
-export function parseBunLock(lockFilePath: string): Map<string, string> {
+export function parseBunLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const content = readFileSync(lockFilePath, "utf8");
   const parsed = parseJsonc(content);
 
   if (!parsed || typeof parsed !== "object") {
