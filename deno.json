@@ -14,6 +14,6 @@
     "@valibot/valibot": "jsr:@valibot/valibot@1.1.0"
   },
   "exclude": [
-    "test/fixtures/*"
+    "testdata/*"
   ]
 }
