@@ -7,5 +7,6 @@ Deno.test("deno lock parser", () => {
 
   assertEquals(versions.get("jsonc-parser"), "3.3.1");
   assertEquals(versions.get("yaml"), "2.8.1");
-  assertEquals(versions.size, 2);
+  assertEquals(versions.get("@hono/react-compat"), "0.0.3");
+  assertEquals(versions.size, 3);
 });
