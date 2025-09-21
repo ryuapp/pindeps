@@ -30,7 +30,7 @@ jobs:
       - name: Test
         run: deno task test
       - name: TypeCheck
-        run: deno check .
+        run: deno task typecheck
 
       - name: Build
         run: deno task build
