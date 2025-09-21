@@ -40,18 +40,6 @@ export function parseDenoLock(content: string): Map<string, string> {
 
   const lockFile = result.output;
 
-  // Parse npm packages from the npm section
-  if (lockFile.npm) {
-    for (const [key, _value] of Object.entries(lockFile.npm)) {
-      // Format: "package-name@version" or "@scope/package@version"
-      const match = key.match(/^(.+?)@([^@]+)$/);
-      if (match) {
-        const [, packageName, version] = match;
-        versions.set(packageName, version);
-      }
-    }
-  }
-
   // Also check specifiers for npm: and jsr: packages to get resolved versions
   if (lockFile.specifiers) {
     for (const [spec, resolved] of Object.entries(lockFile.specifiers)) {
@@ -63,7 +51,9 @@ export function parseDenoLock(content: string): Map<string, string> {
           const [, packageName] = specMatch;
           // The resolved value is just the version number for npm packages
           if (!resolved.includes(":")) {
-            versions.set(packageName, resolved);
+            // Remove everything after _ in version for deno
+            const cleanVersion = resolved.split("_")[0];
+            versions.set(packageName, cleanVersion);
           }
         }
       } else if (spec.startsWith("jsr:")) {
