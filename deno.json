@@ -1,6 +1,7 @@
 {
   "tasks": {
     "run": "deno run -WR src/main.ts",
+    "test": "deno test --unstable-raw-imports --parallel",
     "build": "deno -W=bin --unstable-bundle scripts/build-package.ts"
   },
   "fmt": {

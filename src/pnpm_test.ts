@@ -1,10 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { readFileSync } from "node:fs";
 import { parsePnpmLock } from "./pnpm.ts";
+import pnpmLock from "../testdata/pnpm-lock.yaml" with { type: "text" };
 
 Deno.test("pnpm lock parser", () => {
-  const content = readFileSync("testdata/pnpm-lock.yaml", "utf8");
-  const versions = parsePnpmLock(content);
+  const versions = parsePnpmLock(pnpmLock);
 
   assertEquals(versions.get("jsonc-parser"), "3.3.1");
   assertEquals(versions.get("yaml"), "2.8.1");

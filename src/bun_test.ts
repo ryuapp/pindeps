@@ -1,10 +1,9 @@
 import { assertEquals } from "@std/assert";
-import { readFileSync } from "node:fs";
 import { parseBunLock } from "./bun.ts";
+import bunLock from "../testdata/bun.lock" with { type: "text" };
 
 Deno.test("bun lock parser", () => {
-  const content = readFileSync("testdata/bun.lock", "utf8");
-  const versions = parseBunLock(content);
+  const versions = parseBunLock(bunLock);
 
   assertEquals(versions.get("jsonc-parser"), "3.3.1");
   assertEquals(versions.get("yaml"), "2.8.1");
