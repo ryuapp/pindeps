@@ -1,33 +1,35 @@
 import * as v from "@valibot/valibot";
 
-const NpmLockFileSchema = v.object({
-  lockfileVersion: v.optional(v.number()),
-  dependencies: v.optional(
-    v.record(
-      v.string(),
-      v.object({
-        version: v.string(),
-      }),
+const NpmLockFileSchema = v.pipe(
+  v.string(),
+  v.parseJson(),
+  v.object({
+    lockfileVersion: v.optional(v.number()),
+    dependencies: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          version: v.string(),
+        }),
+      ),
     ),
-  ),
-  packages: v.optional(
-    v.record(
-      v.string(),
-      v.object({
-        version: v.optional(v.string()),
-        resolved: v.optional(v.string()),
-        link: v.optional(v.boolean()),
-      }),
+    packages: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          version: v.optional(v.string()),
+          resolved: v.optional(v.string()),
+          link: v.optional(v.boolean()),
+        }),
+      ),
     ),
-  ),
-});
+  }),
+);
 
 export function parseNpmLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
 
-  const parsed = JSON.parse(content);
-  const result = v.safeParse(NpmLockFileSchema, parsed);
-
+  const result = v.safeParse(NpmLockFileSchema, content);
   if (!result.success) {
     throw new Error(
       `Invalid package-lock.json format: ${v.flatten(result.issues)}`,

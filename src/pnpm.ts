@@ -1,63 +1,62 @@
-import { parse as parseYaml } from "@std/yaml";
 import * as v from "@valibot/valibot";
+import { yamlSchema } from "./schema.ts";
 
-const PnpmLockFileSchema = v.object({
-  lockfileVersion: v.optional(v.union([v.string(), v.number()])),
-  importers: v.optional(
-    v.record(
-      v.string(),
-      v.object({
-        dependencies: v.optional(
-          v.record(
-            v.string(),
-            v.union([v.string(), v.object({ version: v.string() })]),
+const PnpmLockFileSchema = v.pipe(
+  v.string(),
+  yamlSchema,
+  v.object({
+    lockfileVersion: v.optional(v.union([v.string(), v.number()])),
+    importers: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          dependencies: v.optional(
+            v.record(
+              v.string(),
+              v.union([v.string(), v.object({ version: v.string() })]),
+            ),
           ),
-        ),
-        devDependencies: v.optional(
-          v.record(
-            v.string(),
-            v.union([v.string(), v.object({ version: v.string() })]),
+          devDependencies: v.optional(
+            v.record(
+              v.string(),
+              v.union([v.string(), v.object({ version: v.string() })]),
+            ),
           ),
-        ),
-        optionalDependencies: v.optional(
-          v.record(
-            v.string(),
-            v.union([v.string(), v.object({ version: v.string() })]),
+          optionalDependencies: v.optional(
+            v.record(
+              v.string(),
+              v.union([v.string(), v.object({ version: v.string() })]),
+            ),
           ),
-        ),
-      }),
+        }),
+      ),
     ),
-  ),
-  dependencies: v.optional(
-    v.record(
-      v.string(),
-      v.union([v.string(), v.object({ version: v.string() })]),
+    dependencies: v.optional(
+      v.record(
+        v.string(),
+        v.union([v.string(), v.object({ version: v.string() })]),
+      ),
     ),
-  ),
-  devDependencies: v.optional(
-    v.record(
-      v.string(),
-      v.union([v.string(), v.object({ version: v.string() })]),
+    devDependencies: v.optional(
+      v.record(
+        v.string(),
+        v.union([v.string(), v.object({ version: v.string() })]),
+      ),
     ),
-  ),
-  optionalDependencies: v.optional(
-    v.record(
-      v.string(),
-      v.union([v.string(), v.object({ version: v.string() })]),
+    optionalDependencies: v.optional(
+      v.record(
+        v.string(),
+        v.union([v.string(), v.object({ version: v.string() })]),
+      ),
     ),
-  ),
-  packages: v.optional(v.record(v.string(), v.unknown())),
-});
+    packages: v.optional(v.record(v.string(), v.unknown())),
+  }),
+);
 
 export function parsePnpmLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const parsed = parseYaml(content);
 
-  if (!parsed || typeof parsed !== "object") {
-    throw new Error("Invalid pnpm-lock.yaml file");
-  }
-
-  const result = v.safeParse(PnpmLockFileSchema, parsed);
+  const result = v.safeParse(PnpmLockFileSchema, content);
 
   if (!result.success) {
     throw new Error(

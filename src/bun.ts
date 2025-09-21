@@ -1,33 +1,31 @@
-import { parse as parseJsonc } from "@std/jsonc";
 import * as v from "@valibot/valibot";
+import { jsoncSchema } from "./schema.ts";
 
-const BunLockFileSchema = v.object({
-  lockfileVersion: v.number(),
-  workspaces: v.optional(
-    v.record(
-      v.string(),
-      v.object({
-        name: v.optional(v.string()),
-        dependencies: v.optional(v.record(v.string(), v.string())),
-        devDependencies: v.optional(v.record(v.string(), v.string())),
-      }),
+const BunLockFileSchema = v.pipe(
+  v.string(),
+  jsoncSchema,
+  v.object({
+    lockfileVersion: v.number(),
+    workspaces: v.optional(
+      v.record(
+        v.string(),
+        v.object({
+          name: v.optional(v.string()),
+          dependencies: v.optional(v.record(v.string(), v.string())),
+          devDependencies: v.optional(v.record(v.string(), v.string())),
+        }),
+      ),
     ),
-  ),
-  packages: v.optional(
-    v.record(v.string(), v.array(v.union([v.string(), v.object({})]))),
-  ),
-});
+    packages: v.optional(
+      v.record(v.string(), v.array(v.union([v.string(), v.object({})]))),
+    ),
+  }),
+);
 
 export function parseBunLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const parsed = parseJsonc(content);
 
-  if (!parsed || typeof parsed !== "object") {
-    throw new Error("Invalid bun.lock file");
-  }
-
-  const result = v.safeParse(BunLockFileSchema, parsed);
-
+  const result = v.safeParse(BunLockFileSchema, content);
   if (!result.success) {
     throw new Error(`Invalid bun.lock format: ${v.flatten(result.issues)}`);
   }

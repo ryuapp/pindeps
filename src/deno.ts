@@ -1,37 +1,39 @@
 import * as v from "@valibot/valibot";
 
-const DenoLockFileSchema = v.object({
-  version: v.optional(v.string()),
-  specifiers: v.optional(v.record(v.string(), v.string())),
-  npm: v.optional(
-    v.record(
-      v.string(),
-      v.object({
-        integrity: v.string(),
-        dependencies: v.optional(v.record(v.string(), v.string())),
-        bin: v.optional(v.boolean()),
-      }),
-    ),
-  ),
-  workspace: v.optional(
-    v.object({
-      packageJson: v.optional(
+const DenoLockFileSchema = v.pipe(
+  v.string(),
+  v.parseJson(),
+  v.object({
+    version: v.optional(v.string()),
+    specifiers: v.optional(v.record(v.string(), v.string())),
+    npm: v.optional(
+      v.record(
+        v.string(),
         v.object({
-          dependencies: v.optional(v.array(v.string())),
-          devDependencies: v.optional(v.array(v.string())),
+          integrity: v.string(),
+          dependencies: v.optional(v.record(v.string(), v.string())),
+          bin: v.optional(v.boolean()),
         }),
       ),
-    }),
-  ),
-  remote: v.optional(v.record(v.string(), v.string())),
-});
+    ),
+    workspace: v.optional(
+      v.object({
+        packageJson: v.optional(
+          v.object({
+            dependencies: v.optional(v.array(v.string())),
+            devDependencies: v.optional(v.array(v.string())),
+          }),
+        ),
+      }),
+    ),
+    remote: v.optional(v.record(v.string(), v.string())),
+  }),
+);
 
 export function parseDenoLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
 
-  const parsed = JSON.parse(content);
-  const result = v.safeParse(DenoLockFileSchema, parsed);
-
+  const result = v.safeParse(DenoLockFileSchema, content);
   if (!result.success) {
     throw new Error(`Invalid deno.lock format: ${v.flatten(result.issues)}`);
   }

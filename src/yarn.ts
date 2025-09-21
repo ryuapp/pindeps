@@ -1,38 +1,38 @@
-import { parse as parseYaml } from "@std/yaml";
 import * as v from "@valibot/valibot";
+import { yamlSchema } from "./schema.ts";
 
-const YarnLockFileSchema = v.record(
+const YarnLockFileSchema = v.pipe(
   v.string(),
-  v.union([
-    v.object({
-      version: v.optional(v.string()),
-      resolution: v.optional(v.string()),
-      dependencies: v.optional(
-        v.record(v.string(), v.union([v.string(), v.number()])),
-      ),
-      checksum: v.optional(v.string()),
-      languageName: v.optional(v.string()),
-      linkType: v.optional(v.string()),
-      bin: v.optional(v.union([v.record(v.string(), v.string()), v.boolean()])),
-    }),
-    v.object({
-      version: v.number(),
-      cacheKey: v.union([v.string(), v.number()]),
-    }),
-    v.undefined_(),
-  ]),
+  yamlSchema,
+  v.record(
+    v.string(),
+    v.union([
+      v.object({
+        version: v.optional(v.string()),
+        resolution: v.optional(v.string()),
+        dependencies: v.optional(
+          v.record(v.string(), v.union([v.string(), v.number()])),
+        ),
+        checksum: v.optional(v.string()),
+        languageName: v.optional(v.string()),
+        linkType: v.optional(v.string()),
+        bin: v.optional(
+          v.union([v.record(v.string(), v.string()), v.boolean()]),
+        ),
+      }),
+      v.object({
+        version: v.number(),
+        cacheKey: v.union([v.string(), v.number()]),
+      }),
+      v.undefined_(),
+    ]),
+  ),
 );
 
 export function parseYarnLock(content: string): Map<string, string> {
   const versions = new Map<string, string>();
-  const parsed = parseYaml(content);
 
-  if (!parsed || typeof parsed !== "object") {
-    throw new Error("Invalid yarn.lock file");
-  }
-
-  const result = v.safeParse(YarnLockFileSchema, parsed);
-
+  const result = v.safeParse(YarnLockFileSchema, content);
   if (!result.success) {
     throw new Error(`Invalid yarn.lock format: ${v.flatten(result.issues)}`);
   }
