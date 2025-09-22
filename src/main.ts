@@ -21,67 +21,65 @@ import {
 } from "./package-json.ts";
 import { join } from "node:path";
 
-function detectPackageManager():
-  | "npm"
-  | "yarn"
-  | "pnpm"
-  | "bun"
-  | "deno"
-  | null {
-  if (existsSync("deno.lock")) return "deno";
-  if (existsSync("bun.lock")) return "bun";
-  if (existsSync("pnpm-lock.yaml")) return "pnpm";
-  if (existsSync("yarn.lock")) return "yarn";
-  if (existsSync("package-lock.json")) return "npm";
-  return null;
+type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "deno";
+interface LockFile {
+  path: string;
+  type: PackageManager;
 }
 
-function getLockFileName(): string | null {
-  if (existsSync("deno.lock")) return "deno.lock";
-  if (existsSync("bun.lock")) return "bun.lock";
-  if (existsSync("pnpm-lock.yaml")) return "pnpm-lock.yaml";
-  if (existsSync("yarn.lock")) return "yarn.lock";
-  if (existsSync("package-lock.json")) return "package-lock.json";
-  return null;
-}
+function getLockFiles(): LockFile[] {
+  const lockFiles: LockFile[] = [];
 
-function getLockedVersions(): Map<string, string> {
-  const packageManager = detectPackageManager();
-
-  switch (packageManager) {
-    case "deno":
-      if (existsSync("deno.lock")) {
-        const content = readFileSync("deno.lock", "utf8");
-        return parseDenoLock(content);
-      }
-      break;
-    case "bun":
-      if (existsSync("bun.lock")) {
-        const content = readFileSync("bun.lock", "utf8");
-        return parseBunLock(content);
-      }
-      break;
-    case "yarn":
-      if (existsSync("yarn.lock")) {
-        const content = readFileSync("yarn.lock", "utf8");
-        return parseYarnLock(content);
-      }
-      break;
-    case "npm":
-      if (existsSync("package-lock.json")) {
-        const content = readFileSync("package-lock.json", "utf8");
-        return parseNpmLock(content);
-      }
-      break;
-    case "pnpm":
-      if (existsSync("pnpm-lock.yaml")) {
-        const content = readFileSync("pnpm-lock.yaml", "utf8");
-        return parsePnpmLock(content);
-      }
-      break;
+  if (existsSync("deno.lock")) {
+    lockFiles.push({ path: "deno.lock", type: "deno" });
+  }
+  if (existsSync("bun.lock")) {
+    lockFiles.push({ path: "bun.lock", type: "bun" });
+  }
+  if (existsSync("pnpm-lock.yaml")) {
+    lockFiles.push({ path: "pnpm-lock.yaml", type: "pnpm" });
+  }
+  if (existsSync("yarn.lock")) {
+    lockFiles.push({ path: "yarn.lock", type: "yarn" });
+  }
+  if (existsSync("package-lock.json")) {
+    lockFiles.push({ path: "package-lock.json", type: "npm" });
   }
 
-  return new Map();
+  return lockFiles;
+}
+
+function getPackageManagerName(
+  lockFile: LockFile,
+): PackageManager | null {
+  return lockFile ? lockFile.type : null;
+}
+
+function getLockFileName(lockFile: LockFile): string | null {
+  return lockFile ? lockFile.path : null;
+}
+
+function getLockedVersion(lockFile: LockFile): Map<string, string> {
+  if (!lockFile) {
+    return new Map();
+  }
+
+  const content = readFileSync(lockFile.path, "utf8");
+
+  switch (lockFile.type) {
+    case "deno":
+      return parseDenoLock(content);
+    case "bun":
+      return parseBunLock(content);
+    case "yarn":
+      return parseYarnLock(content);
+    case "npm":
+      return parseNpmLock(content);
+    case "pnpm":
+      return parsePnpmLock(content);
+    default:
+      return new Map();
+  }
 }
 
 function shouldPin(version: string): boolean {
@@ -182,19 +180,27 @@ function pinDependencies(
 function main() {
   try {
     const packageJsonFiles = findPackageJsonFiles();
-
     if (packageJsonFiles.length === 0) {
       console.error("❌ Error: package.json not found");
       process.exit(1);
     }
 
-    // Get locked versions from lock file
-    const lockedVersions = getLockedVersions();
+    // TODO: Error handling for multiple lock files
+    const lockFile = getLockFiles().at(0);
+    if (!lockFile) {
+      console.error(
+        "❌ Error: No lock file found (deno.lock, bun.lock, pnpm-lock.yaml, yarn.lock, or package-lock.json)",
+      );
+      process.exit(1);
+    }
 
+    // Get locked versions from lock file
+    const lockedVersions = getLockedVersion(lockFile);
     if (lockedVersions.size === 0) {
       console.log(
-        "⚠️  Warning: No lock file found or unable to parse lock file\n",
+        "❌ Error: No lock file found or unable to parse lock file",
       );
+      process.exit(1);
     }
 
     // Calculate max package name and version length across all package.json files for alignment
@@ -239,7 +245,7 @@ function main() {
     }
 
     if (willHaveAnyChanges) {
-      const lockFileName = getLockFileName();
+      const lockFileName = getLockFileName(lockFile);
       console.log(
         `📦 Found ${lockedVersions.size} dependencies in ${lockFileName}`,
       );
@@ -298,8 +304,8 @@ function main() {
 
     if (totalChanges) {
       console.log("\n📌 Dependencies pinned successfully!");
-      const lockFileName = getLockFileName();
-      const packageManager = detectPackageManager();
+      const lockFileName = getLockFileName(lockFile);
+      const packageManager = getPackageManagerName(lockFile);
       const installCommand = packageManager === "yarn"
         ? "yarn"
         : `${packageManager} install`;
