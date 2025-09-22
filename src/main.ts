@@ -206,12 +206,18 @@ function main() {
     // Calculate max package name and version length across all package.json files for alignment
     let maxNameLength = 0;
     let maxVersionLength = 0;
-    const packageJsonContents: Array<{ path: string; json: PackageJson }> = [];
+    const packageJsonContents: Array<
+      { path: string; content: string; json: PackageJson }
+    > = [];
 
     for (const packageJsonPath of packageJsonFiles) {
       const content = readFileSync(packageJsonPath, "utf8");
       const packageJson = parsePackageJson(content);
-      packageJsonContents.push({ path: packageJsonPath, json: packageJson });
+      packageJsonContents.push({
+        path: packageJsonPath,
+        content,
+        json: packageJson,
+      });
 
       for (const depType of DEPENDENCY_TYPES) {
         if (packageJson[depType]) {
@@ -255,7 +261,11 @@ function main() {
 
     // Process each package.json file
     for (
-      const { path: packageJsonPath, json: packageJson } of packageJsonContents
+      const {
+        path: packageJsonPath,
+        content: originalContent,
+        json: packageJson,
+      } of packageJsonContents
     ) {
       let hasChanges = false;
       let hasOutput = false;
@@ -294,10 +304,50 @@ function main() {
       }
 
       if (hasChanges) {
-        writeFileSync(
-          packageJsonPath,
-          JSON.stringify(packageJson, null, 2) + "\n",
-        );
+        // Preserve original formatting by doing targeted string replacement
+        let updatedContent = originalContent;
+
+        // Parse original content to get the actual old versions
+        const originalParsed = parsePackageJson(originalContent);
+
+        // Update each dependency type section
+        for (const depType of DEPENDENCY_TYPES) {
+          const originalDeps = originalParsed[depType];
+          if (!originalDeps) continue;
+
+          const pinnedDeps =
+            (packageJson as Record<string, Record<string, string>>)[depType];
+
+          // For each dependency that needs updating
+          for (const [pkgName, newVersion] of Object.entries(pinnedDeps)) {
+            const oldVersion = originalDeps[pkgName];
+            if (oldVersion && oldVersion !== newVersion) {
+              // Create a regex that matches the exact dependency line
+              // This preserves any formatting (spaces, tabs, etc.)
+              const escapedName = pkgName.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&",
+              );
+              const escapedOldVersion = oldVersion.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&",
+              );
+
+              // Match pattern: "package-name" : "old-version"
+              // with flexible whitespace
+              const pattern =
+                `("${escapedName}"\\s*:\\s*")${escapedOldVersion}(")`;
+              const regex = new RegExp(pattern);
+
+              updatedContent = updatedContent.replace(
+                regex,
+                `$1${newVersion}$2`,
+              );
+            }
+          }
+        }
+
+        writeFileSync(packageJsonPath, updatedContent);
         totalChanges = true;
       }
     }

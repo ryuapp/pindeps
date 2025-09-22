@@ -1,9 +1,16 @@
 import * as v from "@valibot/valibot";
 
+export interface PackageJson {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  workspaces?: string[] | { packages?: string[] };
+  [key: string]: unknown;
+}
 const PackageJsonSchema = v.pipe(
   v.string(),
   v.parseJson(),
-  v.object({
+  v.looseObject({
     dependencies: v.optional(v.record(v.string(), v.string())),
     devDependencies: v.optional(v.record(v.string(), v.string())),
     peerDependencies: v.optional(v.record(v.string(), v.string())),
@@ -17,9 +24,6 @@ const PackageJsonSchema = v.pipe(
     ),
   }),
 );
-
-export type PackageJson = v.InferOutput<typeof PackageJsonSchema>;
-
 export const DEPENDENCY_TYPES = [
   "dependencies",
   "devDependencies",
