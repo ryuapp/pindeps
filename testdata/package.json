@@ -1,0 +1,15 @@
+{
+  "name": "testdata",
+  "version": "1.0.0",
+  "dependencies": {
+    "jsonc-parser": "^3.3.1",
+    "yaml": "^2.8.1"
+  },
+  "devDependencies": {
+    "enogu": "~0.6.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0"
+  },
+  "workspaces": ["packages/*", "apps/*"]
+}

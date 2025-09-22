@@ -7,7 +7,6 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
 import { styleText } from "node:util";
 import process from "node:process";
 import { parseNpmLock } from "./npm.ts";
@@ -15,15 +14,12 @@ import { parseYarnLock } from "./yarn.ts";
 import { parsePnpmLock } from "./pnpm.ts";
 import { parseBunLock } from "./bun.ts";
 import { parseDenoLock } from "./deno.ts";
-
-interface PackageJson {
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-  overrides?: Record<string, string>;
-  resolutions?: Record<string, string>;
-}
+import {
+  DEPENDENCY_TYPES,
+  type PackageJson,
+  parsePackageJson,
+} from "./package-json.ts";
+import { join } from "node:path";
 
 function detectPackageManager():
   | "npm"
@@ -104,43 +100,14 @@ function shouldPin(version: string): boolean {
     version.split(".").length < 3; // Partial versions like "2.1" or "1.0"
 }
 
-function pinDependencies(
-  deps: Record<string, string>,
-  lockedVersions: Map<string, string>,
-  maxNameLength: number,
-  maxVersionLength: number,
-): Record<string, string> {
-  const pinned: Record<string, string> = {};
-
-  for (const [name, version] of Object.entries(deps)) {
-    if (shouldPin(version)) {
-      const lockedVersion = lockedVersions.get(name);
-      if (lockedVersion) {
-        pinned[name] = lockedVersion;
-        const paddedName = name.padEnd(maxNameLength);
-        const paddedVersion = version.padEnd(maxVersionLength);
-        const oldVersion = styleText("gray", paddedVersion);
-        const newVersion = styleText("green", lockedVersion);
-        console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
-      } else {
-        pinned[name] = version;
-        console.log(`⚠️ ${name}: no locked version found`);
-      }
-    } else {
-      pinned[name] = version;
-    }
-  }
-
-  return pinned;
-}
-
 function findPackageJsonFiles(): string[] {
   const packageFiles = ["package.json"];
 
   // Look for workspace package.json files
   const rootPackageJson = "package.json";
   if (existsSync(rootPackageJson)) {
-    const rootPkg = JSON.parse(readFileSync(rootPackageJson, "utf8"));
+    const content = readFileSync(rootPackageJson, "utf8");
+    const rootPkg = parsePackageJson(content);
 
     if (rootPkg.workspaces) {
       const workspaces = Array.isArray(rootPkg.workspaces)
@@ -182,6 +149,36 @@ function findPackageJsonFiles(): string[] {
   return packageFiles;
 }
 
+function pinDependencies(
+  deps: Record<string, string>,
+  lockedVersions: Map<string, string>,
+  maxNameLength: number,
+  maxVersionLength: number,
+): Record<string, string> {
+  const pinned: Record<string, string> = {};
+
+  for (const [name, version] of Object.entries(deps)) {
+    if (shouldPin(version)) {
+      const lockedVersion = lockedVersions.get(name);
+      if (lockedVersion) {
+        pinned[name] = lockedVersion;
+        const paddedName = name.padEnd(maxNameLength);
+        const paddedVersion = version.padEnd(maxVersionLength);
+        const oldVersion = styleText("gray", paddedVersion);
+        const newVersion = styleText("green", lockedVersion);
+        console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+      } else {
+        pinned[name] = version;
+        console.log(`⚠️ ${name}: no locked version found`);
+      }
+    } else {
+      pinned[name] = version;
+    }
+  }
+
+  return pinned;
+}
+
 function main() {
   try {
     const packageJsonFiles = findPackageJsonFiles();
@@ -206,21 +203,10 @@ function main() {
     const packageJsonContents: Array<{ path: string; json: PackageJson }> = [];
 
     for (const packageJsonPath of packageJsonFiles) {
-      const packageJson: PackageJson = JSON.parse(
-        readFileSync(packageJsonPath, "utf8"),
-      );
+      const packageJson: PackageJson = parsePackageJson(packageJsonPath);
       packageJsonContents.push({ path: packageJsonPath, json: packageJson });
 
-      const depTypes: Array<keyof PackageJson> = [
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-        "overrides",
-        "resolutions",
-      ];
-
-      for (const depType of depTypes) {
+      for (const depType of DEPENDENCY_TYPES) {
         if (packageJson[depType]) {
           const deps = packageJson[depType] as Record<string, string>;
           for (const [name, version] of Object.entries(deps)) {
@@ -236,16 +222,7 @@ function main() {
     // Check if there will be any changes across all package.json files
     let willHaveAnyChanges = false;
     for (const { json: packageJson } of packageJsonContents) {
-      const depTypes: Array<keyof PackageJson> = [
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-        "overrides",
-        "resolutions",
-      ];
-
-      for (const depType of depTypes) {
+      for (const depType of DEPENDENCY_TYPES) {
         if (packageJson[depType]) {
           const deps = packageJson[depType] as Record<string, string>;
           const hasChanges = Object.entries(deps).some(([name, version]) => {
@@ -277,16 +254,8 @@ function main() {
       let hasOutput = false;
 
       // Process all dependency types
-      const depTypes: Array<keyof PackageJson> = [
-        "dependencies",
-        "devDependencies",
-        "peerDependencies",
-        "optionalDependencies",
-        "overrides",
-        "resolutions",
-      ];
 
-      for (const depType of depTypes) {
+      for (const depType of DEPENDENCY_TYPES) {
         if (packageJson[depType]) {
           const originalDeps = packageJson[depType] as Record<string, string>;
 
