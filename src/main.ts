@@ -203,7 +203,8 @@ function main() {
     const packageJsonContents: Array<{ path: string; json: PackageJson }> = [];
 
     for (const packageJsonPath of packageJsonFiles) {
-      const packageJson: PackageJson = parsePackageJson(packageJsonPath);
+      const content = readFileSync(packageJsonPath, "utf8");
+      const packageJson = parsePackageJson(content);
       packageJsonContents.push({ path: packageJsonPath, json: packageJson });
 
       for (const depType of DEPENDENCY_TYPES) {
