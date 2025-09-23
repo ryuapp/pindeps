@@ -1,0 +1,7 @@
+{
+  "name": "@workspace/ui",
+  "dependencies": {
+    "clsx": "^1.2.1",
+    "react": "catalog:react18"
+  }
+}

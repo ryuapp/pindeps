@@ -1,0 +1,8 @@
+{
+  "name": "pnpm-workspace-testdata",
+  "private": true,
+  "dependencies": {
+    "enogu": "catalog:",
+    "react": "catalog:react19"
+  }
+}

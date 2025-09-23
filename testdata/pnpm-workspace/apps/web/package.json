@@ -1,0 +1,7 @@
+{
+  "name": "@workspace/web",
+  "dependencies": {
+    "@workspace/ui": "workspace:*",
+    "react": "catalog:react18"
+  }
+}
