@@ -1,6 +1,16 @@
 import { assertEquals } from "@std/assert";
-import { parsePnpmLock } from "./pnpm.ts";
+import {
+  parsePnpmLock,
+  parsePnpmLockForCatalogs,
+  parsePnpmWorkspace,
+} from "./pnpm.ts";
 import pnpmLock from "../testdata/polyrepo/pnpm-lock.yaml" with {
+  type: "text",
+};
+import pnpmWorkspaceLock from "../testdata/pnpm-workspace/pnpm-lock.yaml" with {
+  type: "text",
+};
+import pnpmWorkspace from "../testdata/pnpm-workspace/pnpm-workspace.yaml" with {
   type: "text",
 };
 
@@ -11,4 +21,24 @@ Deno.test("parse pnpm-lock.yaml for polyrepo", () => {
   assertEquals(versions.get("enogu"), "0.6.2");
   assertEquals(versions.get("@hono/react-compat"), "0.0.3");
   assertEquals(versions.get("react"), "19.1.1");
+});
+
+Deno.test("parsePnpmLockForCatalogs - workspace lock file", () => {
+  const result = parsePnpmLockForCatalogs(pnpmWorkspaceLock);
+
+  // Test default catalog (becomes catalog)
+  assertEquals(result.catalog?.["enogu"], "0.6.2");
+
+  // Test named catalogs (react18, react19)
+  assertEquals(result.catalogs?.["react18"]?.["react"], "18.3.1");
+  assertEquals(result.catalogs?.["react19"]?.["react"], "19.1.1");
+});
+
+Deno.test("parsePnpmWorkspace - basic workspace", () => {
+  const result = parsePnpmWorkspace(pnpmWorkspace);
+
+  assertEquals(result.packages, ["apps/*", "packages/*"]);
+  assertEquals(result.catalog?.["enogu"], "^0.6.0");
+  assertEquals(result.catalogs?.["react18"]?.["react"], "^18.2.0");
+  assertEquals(result.catalogs?.["react19"]?.["react"], "^19.0.0");
 });
