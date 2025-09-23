@@ -1,0 +1,58 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@hono/react-compat':
+        specifier: ^0.0.3
+        version: 0.0.3(hono@4.9.8)
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
+      react:
+        specifier: '>=18.0.0'
+        version: 19.1.1
+    devDependencies:
+      enogu:
+        specifier: ~0.6.0
+        version: 0.6.2
+
+packages:
+
+  '@hono/react-compat@0.0.3':
+    resolution: {integrity: sha512-/q1xv6siUJHWeLxJFL+YVR15ylIFe1N3NhrL14a9NH+cV6x53MTQM8g5Xik/J1Xsw4WBLUzKCH+lMENfdhwriA==}
+    peerDependencies:
+      hono: '>=4.5.*'
+
+  enogu@0.6.2:
+    resolution: {integrity: sha512-gPvPpHxTGn0J+izA6AsK+vQ1PSIQWRMoik7MqzDwfGt9LUcRoielQ2KHoDNYilpkmTjAYLU5d2TkhXNxHDsjHA==}
+
+  hono@4.9.8:
+    resolution: {integrity: sha512-JW8Bb4RFWD9iOKxg5PbUarBYGM99IcxFl2FPBo2gSJO11jjUDqlP1Bmfyqt8Z/dGhIQ63PMA9LdcLefXyIasyg==}
+    engines: {node: '>=16.9.0'}
+
+  jsonc-parser@3.3.1:
+    resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
+
+  react@19.1.1:
+    resolution: {integrity: sha512-w8nqGImo45dmMIfljjMwOGtbmC/mk4CMYhWIicdSflH91J9TyCyczcPFXJzrZ/ZXcgGRFeP6BU0BEJTw6tZdfQ==}
+    engines: {node: '>=0.10.0'}
+
+snapshots:
+
+  '@hono/react-compat@0.0.3(hono@4.9.8)':
+    dependencies:
+      hono: 4.9.8
+
+  enogu@0.6.2: {}
+
+  hono@4.9.8: {}
+
+  jsonc-parser@3.3.1: {}
+
+  react@19.1.1: {}
