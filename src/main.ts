@@ -8,6 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { styleText } from "node:util";
+import { parseArgs } from "@std/cli";
 import process from "node:process";
 import { parsePnpmWorkspace, pinPnpmWorkspaceCatalogs } from "./pnpm.ts";
 import {
@@ -22,6 +23,7 @@ import {
   type PackageManager,
   shouldPinVersion,
 } from "./utils.ts";
+import packageJson from "../package.json" with { type: "json" };
 
 function getLockFiles(): LockFile[] {
   const lockFiles: LockFile[] = [];
@@ -219,6 +221,16 @@ function pinDependencies(
 }
 
 function main() {
+  const args = parseArgs(process.argv.slice(2), {
+    boolean: ["version"],
+  });
+
+  // --version flag
+  if (args.version) {
+    console.log(`pindeps ${packageJson.version}`);
+    process.exit(0);
+  }
+
   try {
     const packageManagerFiles = findPackageManagerFiles();
     const packageJsonFiles = packageManagerFiles.filter((file) =>
