@@ -1,34 +1,52 @@
 # pindeps
 
-pindeps is a tool to pin versions of dependencies in `package.json` and other files. It's inspired by [pinact](https://github.com/suzuki-shunsuke/pinact).
+[![License](https://img.shields.io/github/license/ryuapp/pindeps?labelColor=171717&color=39b54a&label=License)](https://github.com/ryuapp/pindeps/blob/main/LICENSE)
+[![npm](https://img.shields.io/npm/v/pindeps?labelColor=171717&color=39b54a)](https://www.npmjs.com/package/pindeps)
+
+pindeps is a CLI to pin versions of JavaScript package managers' dependencies, such as `package.json`. pindeps parses lockfiles to pin versions.
+
+```diff
+{
+  "dependencies": {
+-   "hono": "^4.5.0",
++   "hono": "4.9.8",
+  }
+}
+```
+
+## Usage
 
 ```sh
-npx pindeps@latest
+npx pindeps
+
+# Deno
+deno -WR="./" npm:pindeps
 ```
 
 ## Roadmap
 
-This library currently only supports `package.json`, but the support is unstable.
-Our immediate goal is to fully support latest npm/Yarn/pnpm/Bun/Deno lock files and fully pin `package.json` dependencies.
+This CLI currently supports `package.json` and `pnpm-workspace.yaml`, but the support is unstable.
 
 ### Package management files support
 
-- [ ] package.json
-- [ ] pnpm-workspace.yaml
+- [x] package.json (dependencies, devDependencies, peerDependencies)
+- [x] pnpm-workspace.yaml (catalog, catalogs)
 - [ ] deno.json(c)
 
 ### Lock files support
 
-- [ ] package-lock.json (npm)
-- [ ] yarn.lock (Yarn)
-- [ ] pnpm-lock.yaml (pnpm)
-- [ ] bun.lock (Bun)
-- [ ] deno.lock (Deno)
+- [x] package-lock.json (npm)
+- [x] yarn.lock (Yarn)
+- [x] pnpm-lock.yaml (pnpm)
+- [x] bun.lock (Bun)
+- [x] deno.lock (Deno)
 
 ## Feedback
 
-Find a bug or have an idea how to improve this code? [Please fill out an issue](https://github.com/ryuapp/pindeps/issues/new).
+Find a bug or have an idea for a new feature? [Please fill out an issue](https://github.com/ryuapp/pindeps/issues/new).
 
-## References
+## Related
 
-[Should you Pin your JavaScript Dependencies?](https://docs.renovatebot.com/dependency-pinning/) - Renovate Docs has a good explanation about pinning dependencies.
+- [Should you Pin your JavaScript Dependencies?](https://docs.renovatebot.com/dependency-pinning/) - Renovate Docs has a good explanation about pinning dependencies.
+
+- [pinact](https://github.com/suzuki-shunsuke/pinact) by [Shunsuke Suzuki](https://github.com/suzuki-shunsuke) - A CLI to pin versions of Actions and Reusable Workflows.
