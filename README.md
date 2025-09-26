@@ -2,6 +2,7 @@
 
 [![License](https://img.shields.io/github/license/ryuapp/pindeps?labelColor=171717&color=39b54a&label=License)](https://github.com/ryuapp/pindeps/blob/main/LICENSE)
 [![npm](https://img.shields.io/npm/v/pindeps?labelColor=171717&color=39b54a)](https://www.npmjs.com/package/pindeps)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ryuapp/pindeps)
 
 pindeps is a CLI to pin versions of JavaScript package managers' dependencies, such as `package.json`. pindeps parses lockfiles to pin versions.
 
