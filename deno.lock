@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@ryu/enogu@~0.6.2": "0.6.2",
     "jsr:@std/assert@1.0.14": "1.0.14",
     "jsr:@std/cli@1.0.22": "1.0.22",
     "jsr:@std/internal@^1.0.10": "1.0.10",
@@ -11,6 +12,9 @@
     "npm:@types/node@*": "24.2.0"
   },
   "jsr": {
+    "@ryu/enogu@0.6.2": {
+      "integrity": "3209720528773bcc5070c2df90778a9a3d04d11eca6a7f1601a0d38b17ef69f6"
+    },
     "@std/assert@1.0.14": {
       "integrity": "68d0d4a43b365abc927f45a9b85c639ea18a9fab96ad92281e493e4ed84abaa4",
       "dependencies": [
@@ -52,6 +56,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@ryu/enogu@~0.6.2",
       "jsr:@std/assert@1.0.14",
       "jsr:@std/cli@1.0.22",
       "jsr:@std/jsonc@1.0.2",
