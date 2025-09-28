@@ -1,7 +1,7 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@ryu/enogu@~0.6.2": "0.6.2",
+    "jsr:@ryu/enogu@0.6.2": "0.6.2",
     "jsr:@std/assert@1.0.14": "1.0.14",
     "jsr:@std/cli@1.0.22": "1.0.22",
     "jsr:@std/internal@^1.0.10": "1.0.10",
@@ -56,7 +56,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@ryu/enogu@~0.6.2",
+      "jsr:@ryu/enogu@0.6.2",
       "jsr:@std/assert@1.0.14",
       "jsr:@std/cli@1.0.22",
       "jsr:@std/jsonc@1.0.2",
