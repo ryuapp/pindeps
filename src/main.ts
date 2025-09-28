@@ -7,7 +7,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { styleText } from "node:util";
+import { gray, green } from "@ryu/enogu";
 import { parseArgs } from "@std/cli";
 import process from "node:process";
 import { parsePnpmWorkspace, pinPnpmWorkspaceCatalogs } from "./pnpm.ts";
@@ -205,8 +205,8 @@ function pinDependencies(
         pinned[name] = lockedVersion;
         const paddedName = name.padEnd(maxNameLength);
         const paddedVersion = version.padEnd(maxVersionLength);
-        const oldVersion = styleText("gray", paddedVersion);
-        const newVersion = styleText("green", lockedVersion);
+        const oldVersion = gray(paddedVersion);
+        const newVersion = green(lockedVersion);
         console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
       } else {
         pinned[name] = version;
@@ -483,8 +483,8 @@ function main() {
           const paddedVersion = change.oldVersion.padEnd(
             combinedMaxVersionLength,
           );
-          const oldVersion = styleText("gray", paddedVersion);
-          const newVersion = styleText("green", change.newVersion);
+          const oldVersion = gray(paddedVersion);
+          const newVersion = green(change.newVersion);
           console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
         }
 
