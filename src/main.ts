@@ -16,7 +16,7 @@ import {
   type PackageJson,
   parsePackageJson,
 } from "./package-json.ts";
-import { join } from "node:path";
+import { join } from "@std/path";
 import {
   getLockedVersion,
   type LockFile,
