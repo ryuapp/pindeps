@@ -8,7 +8,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { gray, green } from "@ryu/enogu";
-import { parseArgs } from "@std/cli";
+import { parseArgs } from "@std/cli/parse-args";
 import process from "node:process";
 import { parsePnpmWorkspace, pinPnpmWorkspaceCatalogs } from "./pnpm.ts";
 import {
@@ -16,7 +16,7 @@ import {
   type PackageJson,
   parsePackageJson,
 } from "./package-json.ts";
-import { join } from "@std/path";
+import { join } from "@std/path/join";
 import {
   getLockedVersion,
   type LockFile,
