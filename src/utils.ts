@@ -48,7 +48,7 @@ export function getLockedVersion(lockFile: LockFile): LockData {
       break;
     default:
       throw new Error(
-        `Unsupported lock file type: ${lockFile.type satisfies never}`,
+        `Unsupported lockfile type: ${lockFile.type satisfies never}`,
       );
   }
 

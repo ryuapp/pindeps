@@ -23,7 +23,7 @@ Deno.test("parse pnpm-lock.yaml for polyrepo", () => {
   assertEquals(versions.get("react"), "19.1.1");
 });
 
-Deno.test("parsePnpmLockForCatalogs - workspace lock file", () => {
+Deno.test("parsePnpmLockForCatalogs - workspace lockfile", () => {
   const result = parsePnpmLockForCatalogs(pnpmWorkspaceLock);
 
   // Test default catalog (becomes catalog)
