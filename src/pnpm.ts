@@ -281,7 +281,7 @@ export function pinPnpmWorkspaceCatalogs(
   if (workspace.catalog) {
     for (const [packageName, version] of Object.entries(workspace.catalog)) {
       if (shouldPinVersion(version)) {
-        // Try to get version from lock file catalog first, then fall back to regular locked versions
+        // Try to get version from lockfile catalog first, then fall back to regular locked versions
         const lockedVersion = lockCatalog?.[packageName] ||
           lockedVersions.get(packageName);
         if (lockedVersion && lockedVersion !== version) {
@@ -318,7 +318,7 @@ export function pinPnpmWorkspaceCatalogs(
     for (const [catalogName, catalog] of Object.entries(workspace.catalogs)) {
       for (const [packageName, version] of Object.entries(catalog)) {
         if (shouldPinVersion(version)) {
-          // Try to get version from lock file catalog first, then fall back to regular locked versions
+          // Try to get version from lockfile catalog first, then fall back to regular locked versions
           const lockedVersion = lockCatalogs?.[catalogName]?.[packageName] ||
             lockedVersions.get(packageName);
           if (lockedVersion && lockedVersion !== version) {

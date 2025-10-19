@@ -245,21 +245,19 @@ function main() {
       process.exit(1);
     }
 
-    // TODO: Error handling for multiple lock files
+    // TODO: Error handling for multiple lockfiles
     const lockFile = getLockFiles().at(0);
     if (!lockFile) {
       console.error(
-        "❌ Error: No lock file found (deno.lock, bun.lock, pnpm-lock.yaml, yarn.lock, or package-lock.json)",
+        "❌ Error: No lockfile found (package-lock.json, yarn.lock, pnpm-lock.yaml, deno.lock or bun.lock)",
       );
       process.exit(1);
     }
 
-    // Get locked versions from lock file
+    // Get locked versions from lockfile
     const lockData = getLockedVersion(lockFile);
     if (lockData.versions.size === 0) {
-      console.log(
-        "❌ Error: No lock file found or unable to parse lock file",
-      );
+      console.log("❌ Error: No lockfile found or unable to parse lockfile");
       process.exit(1);
     }
     const lockedVersions = lockData.versions;
@@ -337,12 +335,8 @@ function main() {
       if (willHaveAnyChanges) break;
     }
 
-    if (willHaveAnyChanges) {
-      const lockFileName = getLockFileName(lockFile);
-      console.log(
-        `📦 Found ${lockedVersions.size} dependencies in ${lockFileName}`,
-      );
-    }
+    const lockFileName = getLockFileName(lockFile);
+    console.log(`🔒 Lockfile: ${lockFileName}`);
 
     let totalChanges = false;
 
@@ -494,18 +488,14 @@ function main() {
     }
 
     if (totalChanges) {
-      console.log("\n📌 Dependencies pinned successfully!");
       const lockFileName = getLockFileName(lockFile);
       const packageManager = getPackageManagerName(lockFile);
       const installCommand = packageManager === "yarn"
         ? "yarn"
         : `${packageManager} install`;
-      console.log(
-        `   Run \`${installCommand}\` to update ${lockFileName}.`,
-      );
-    } else {
-      console.log("📌 All dependencies are already pinned!");
+      console.log(`\nℹ️ Run \`${installCommand}\` to update ${lockFileName}`);
     }
+    console.log(`📌 Pinned ${lockedVersions.size} dependencies`);
   } catch (error) {
     console.error("❌ Error:", error instanceof Error ? error.message : error);
     process.exit(1);

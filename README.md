@@ -34,7 +34,7 @@ This CLI currently supports `package.json` and `pnpm-workspace.yaml`, but the su
 - [x] pnpm-workspace.yaml (catalog, catalogs)
 - [ ] deno.json(c)
 
-### Lock files support
+### Lockfiles support
 
 - [x] package-lock.json (npm)
 - [x] yarn.lock (Yarn)
