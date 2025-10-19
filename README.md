@@ -9,8 +9,8 @@ pindeps is a CLI to pin versions of JavaScript package managers' dependencies, s
 ```diff
 {
   "dependencies": {
--   "hono": "^4.5.0",
-+   "hono": "4.9.8",
+-   "pindeps": "^0.2.0"
++   "pindeps": "0.3.1"
   }
 }
 ```
