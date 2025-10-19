@@ -30,7 +30,7 @@ This CLI currently supports `package.json` and `pnpm-workspace.yaml`, but the su
 
 ### Package management files support
 
-- [x] package.json (dependencies, devDependencies, peerDependencies)
+- [x] package.json (dependencies, devDependencies)
 - [x] pnpm-workspace.yaml (catalog, catalogs)
 - [ ] deno.json(c)
 
