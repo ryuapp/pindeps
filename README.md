@@ -19,9 +19,12 @@ pindeps is a CLI to pin versions of JavaScript package managers' dependencies, s
 
 ```sh
 npx pindeps
+```
 
-# Deno
-deno -WR="./" npm:pindeps
+Secure usage with Deno:
+
+```sh
+deno --no-lock -WR="." npm:pindeps
 ```
 
 ## Roadmap
