@@ -1,5 +1,5 @@
 import * as v from "@valibot/valibot";
-import { jsoncSchema } from "./schema.ts";
+import { jsoncSchema } from "../schema.ts";
 
 const BunLockFileSchema = v.pipe(
   v.string(),

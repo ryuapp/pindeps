@@ -1,5 +1,5 @@
 import * as v from "@valibot/valibot";
-import { yamlSchema } from "./schema.ts";
+import { yamlSchema } from "../schema.ts";
 
 const YarnLockFileSchema = v.pipe(
   v.string(),
