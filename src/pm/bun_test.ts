@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { parseBunLock } from "./bun.ts";
-import bunLock from "../testdata/polyrepo/bun.lock" with { type: "text" };
+import bunLock from "../../testdata/polyrepo/bun.lock" with { type: "text" };
 
 Deno.test("parse bun.lock for polyrepo", () => {
   const versions = parseBunLock(bunLock);

@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { parseNpmLock } from "./npm.ts";
-import packageLockJson from "../testdata/polyrepo/package-lock.json" with {
+import packageLockJson from "../../testdata/polyrepo/package-lock.json" with {
   type: "text",
 };
 
