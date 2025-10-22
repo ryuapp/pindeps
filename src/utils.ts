@@ -16,19 +16,7 @@ export function shouldPinVersion(version: string): boolean {
     return false;
   }
 
-  // Check if version uses range operators or partial versions
-  return (
-    version.startsWith("^") ||
-    version.startsWith("~") ||
-    version.startsWith(">") ||
-    version.startsWith("<") ||
-    version.startsWith(">=") ||
-    version.startsWith("<=") ||
-    version.includes(" - ") ||
-    version.includes(" || ") ||
-    version === "*" ||
-    version === "latest" ||
-    !version.includes(".") ||
-    version.split(".").length < 3
-  );
+  // Check if version is not in the format 'number.number.number' or 'number.number.number-suffix'
+  const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/;
+  return !semverRegex.test(version);
 }
