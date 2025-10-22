@@ -42,3 +42,9 @@ Deno.test("shouldPinVersion - catalog references", () => {
   assertEquals(shouldPinVersion("catalog:"), false);
   assertEquals(shouldPinVersion("catalog:react18"), false);
 });
+
+Deno.test("shouldPinVersion - prerelease versions", () => {
+  assertEquals(shouldPinVersion("1.0.0-beta3"), false);
+  assertEquals(shouldPinVersion("10.20.30-rc1"), false);
+  assertEquals(shouldPinVersion("16.0.0-beta.0"), false);
+});
