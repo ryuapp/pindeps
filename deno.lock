@@ -2,13 +2,14 @@
   "version": "5",
   "specifiers": {
     "jsr:@ryu/enogu@0.6.2": "0.6.2",
-    "jsr:@std/assert@1.0.14": "1.0.14",
-    "jsr:@std/cli@1.0.22": "1.0.22",
-    "jsr:@std/internal@^1.0.10": "1.0.10",
+    "jsr:@std/assert@1.0.15": "1.0.15",
+    "jsr:@std/cli@1.0.23": "1.0.23",
+    "jsr:@std/internal@^1.0.10": "1.0.12",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/json@^1.0.2": "1.0.2",
     "jsr:@std/jsonc@1.0.2": "1.0.2",
     "jsr:@std/path@1.1.2": "1.1.2",
-    "jsr:@std/yaml@1.0.9": "1.0.9",
+    "jsr:@std/yaml@1.0.10": "1.0.10",
     "jsr:@valibot/valibot@1.1.0": "1.1.0",
     "npm:@types/node@*": "24.2.0"
   },
@@ -16,17 +17,20 @@
     "@ryu/enogu@0.6.2": {
       "integrity": "3209720528773bcc5070c2df90778a9a3d04d11eca6a7f1601a0d38b17ef69f6"
     },
-    "@std/assert@1.0.14": {
-      "integrity": "68d0d4a43b365abc927f45a9b85c639ea18a9fab96ad92281e493e4ed84abaa4",
+    "@std/assert@1.0.15": {
+      "integrity": "d64018e951dbdfab9777335ecdb000c0b4e3df036984083be219ce5941e4703b",
       "dependencies": [
-        "jsr:@std/internal"
+        "jsr:@std/internal@^1.0.12"
       ]
     },
-    "@std/cli@1.0.22": {
-      "integrity": "50d1e4f87887cb8a8afa29b88505ab5081188f5cad3985460c3b471fa49ff21a"
+    "@std/cli@1.0.23": {
+      "integrity": "bf95b7a9425ba2af1ae5a6359daf58c508f2decf711a76ed2993cd352498ccca",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.12"
+      ]
     },
-    "@std/internal@1.0.10": {
-      "integrity": "e3be62ce42cab0e177c27698e5d9800122f67b766a0bea6ca4867886cbde8cf7"
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
     },
     "@std/json@1.0.2": {
       "integrity": "d9e5497801c15fb679f55a2c01c7794ad7a5dfda4dd1bebab5e409cb5e0d34d4"
@@ -40,11 +44,11 @@
     "@std/path@1.1.2": {
       "integrity": "c0b13b97dfe06546d5e16bf3966b1cadf92e1cc83e56ba5476ad8b498d9e3038",
       "dependencies": [
-        "jsr:@std/internal"
+        "jsr:@std/internal@^1.0.10"
       ]
     },
-    "@std/yaml@1.0.9": {
-      "integrity": "6bad3dc766dd85b4b37eabcba81b6aa4eac7a392792ae29abcfb0f90602d55bb"
+    "@std/yaml@1.0.10": {
+      "integrity": "245706ea3511cc50c8c6d00339c23ea2ffa27bd2c7ea5445338f8feff31fa58e"
     },
     "@valibot/valibot@1.1.0": {
       "integrity": "2617f02b532011b8140926899d420a3e1bbb0fcb7cdf8e7b669df89e7edd7f5f"
@@ -64,11 +68,11 @@
   "workspace": {
     "dependencies": [
       "jsr:@ryu/enogu@0.6.2",
-      "jsr:@std/assert@1.0.14",
-      "jsr:@std/cli@1.0.22",
+      "jsr:@std/assert@1.0.15",
+      "jsr:@std/cli@1.0.23",
       "jsr:@std/jsonc@1.0.2",
       "jsr:@std/path@1.1.2",
-      "jsr:@std/yaml@1.0.9",
+      "jsr:@std/yaml@1.0.10",
       "jsr:@valibot/valibot@1.1.0"
     ]
   }
