@@ -23,7 +23,11 @@ import {
 } from "../utils.ts";
 import { getLockedVersion } from "../pm/mod.ts";
 
-export function runPinCommand(): number {
+export function runPinCommand(options: { dev?: boolean } = {}): number {
+  const dependencyTypes = options.dev
+    ? ["devDependencies"] as const
+    : DEPENDENCY_TYPES;
+
   try {
     const pmFiles = findPackageManagerFiles();
     const packageJsonFiles = pmFiles.filter((f) => f.endsWith("package.json"));
@@ -69,7 +73,7 @@ export function runPinCommand(): number {
         json: packageJson,
       });
 
-      for (const depType of DEPENDENCY_TYPES) {
+      for (const depType of dependencyTypes) {
         if (packageJson[depType]) {
           const deps = packageJson[depType] as Record<string, string>;
           for (const [name, version] of Object.entries(deps)) {
@@ -111,7 +115,7 @@ export function runPinCommand(): number {
     // Check if there will be any changes across all package.json files
     let willHaveAnyChanges = false;
     for (const { json: packageJson } of packageJsonContents) {
-      for (const depType of DEPENDENCY_TYPES) {
+      for (const depType of dependencyTypes) {
         if (packageJson[depType]) {
           const deps = packageJson[depType] as Record<string, string>;
           const hasChanges = Object.entries(deps).some(([name, version]) => {
@@ -143,8 +147,7 @@ export function runPinCommand(): number {
       let hasOutput = false;
 
       // Process all dependency types
-
-      for (const depType of DEPENDENCY_TYPES) {
+      for (const depType of dependencyTypes) {
         if (packageJson[depType]) {
           const originalDeps = packageJson[depType] as Record<string, string>;
 
@@ -183,7 +186,7 @@ export function runPinCommand(): number {
         const originalParsed = parsePackageJson(originalContent);
 
         // Update each dependency type section
-        for (const depType of DEPENDENCY_TYPES) {
+        for (const depType of dependencyTypes) {
           const originalDeps = originalParsed[depType];
           if (!originalDeps) continue;
 
