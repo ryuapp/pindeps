@@ -22,6 +22,7 @@ import {
   shouldPinVersion,
 } from "../utils.ts";
 import { getLockedVersion } from "../pm/mod.ts";
+import { updatePackageJsonContent } from "./utils.ts";
 
 export function runPinCommand(options: { dev?: boolean } = {}): number {
   const dependencyTypes = options.dev
@@ -179,48 +180,11 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
       }
 
       if (hasChanges) {
-        // Preserve original formatting by doing targeted string replacement
-        let updatedContent = originalContent;
-
-        // Parse original content to get the actual old versions
-        const originalParsed = parsePackageJson(originalContent);
-
-        // Update each dependency type section
-        for (const depType of dependencyTypes) {
-          const originalDeps = originalParsed[depType];
-          if (!originalDeps) continue;
-
-          const pinnedDeps =
-            (packageJson as Record<string, Record<string, string>>)[depType];
-
-          // For each dependency that needs updating
-          for (const [pkgName, newVersion] of Object.entries(pinnedDeps)) {
-            const oldVersion = originalDeps[pkgName];
-            if (oldVersion && oldVersion !== newVersion) {
-              // Create a regex that matches the exact dependency line
-              // This preserves any formatting (spaces, tabs, etc.)
-              const escapedName = pkgName.replace(
-                /[.*+?^${}()|[\\]\\]/g,
-                "\\$&",
-              );
-              const escapedOldVersion = oldVersion.replace(
-                /[.*+?^${}()|[\\]\\]/g,
-                "\\$&",
-              );
-
-              // Match pattern: "package-name" : "old-version"
-              // with flexible whitespace
-              const pattern =
-                `(\"${escapedName}\"\\s*:\\s*\")${escapedOldVersion}(\")`;
-              const regex = new RegExp(pattern);
-
-              updatedContent = updatedContent.replace(
-                regex,
-                `$1${newVersion}$2`,
-              );
-            }
-          }
-        }
+        const updatedContent = updatePackageJsonContent(
+          originalContent,
+          packageJson as Record<string, Record<string, string>>,
+          dependencyTypes,
+        );
 
         writeFileSync(packageJsonPath, updatedContent);
         totalChanges = true;
