@@ -27,24 +27,6 @@ Secure usage with Deno:
 deno --no-lock -WR="." npm:pindeps
 ```
 
-## Roadmap
-
-This CLI currently supports `package.json` and `pnpm-workspace.yaml`, but the support is unstable.
-
-### Package management files support
-
-- [x] package.json (dependencies, devDependencies)
-- [x] pnpm-workspace.yaml (catalog, catalogs)
-- [ ] deno.json(c)
-
-### Lockfiles support
-
-- [x] package-lock.json (npm)
-- [x] yarn.lock (Yarn)
-- [x] pnpm-lock.yaml (pnpm)
-- [x] bun.lock (Bun)
-- [x] deno.lock (Deno)
-
 ## Feedback
 
 Find a bug or have an idea for a new feature? [Please fill out an issue](https://github.com/ryuapp/pindeps/issues/new).
