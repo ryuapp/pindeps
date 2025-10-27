@@ -1,0 +1,7 @@
+{
+  "name": "simple-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "enogu": "^0.6.0"
+  }
+}

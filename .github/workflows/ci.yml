@@ -25,3 +25,5 @@ jobs:
         run: deno task typecheck
       - name: Build
         run: deno task build
+      - name: E2E Test
+        run: deno task test:e2e
