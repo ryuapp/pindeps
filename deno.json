@@ -1,7 +1,8 @@
 {
   "tasks": {
     "run": "deno run -WR src/main.ts",
-    "test": "deno test --unstable-raw-imports --parallel",
+    "test": "deno test --unstable-raw-imports --parallel src/",
+    "test:e2e": "deno test -WRE --allow-run tests/e2e_test.ts",
     "typecheck": "deno check . --unstable-raw-imports",
     "build": "deno -W=bin --unstable-bundle scripts/build-package.ts"
   },
@@ -10,6 +11,7 @@
   },
   "nodeModulesDir": "none",
   "imports": {
+    "@david/dax": "jsr:@david/dax@0.43.2",
     "@ryu/enogu": "jsr:@ryu/enogu@0.6.2",
     "@std/assert": "jsr:@std/assert@1.0.15",
     "@std/cli": "jsr:@std/cli@1.0.23",
