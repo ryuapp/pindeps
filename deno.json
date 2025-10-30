@@ -3,7 +3,7 @@
     "run": "deno run -WR src/main.ts",
     "test": "deno test --unstable-raw-imports --parallel src/",
     "test:e2e": "deno test -WRE --allow-run tests/e2e_test.ts",
-    "typecheck": "deno check . --unstable-raw-imports",
+    "typecheck": "deno check . --unstable-raw-imports --unstable-tsgo",
     "build": "deno -W=bin --unstable-bundle scripts/build-package.ts"
   },
   "fmt": {
