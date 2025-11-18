@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readTextFileSync } from "@std/fs/unstable-read-text-file";
 import { parseNpmLock } from "./npm.ts";
 import { parseYarnLock } from "./yarn.ts";
 import { parsePnpmLock, parsePnpmLockForCatalogs } from "./pnpm.ts";
@@ -19,7 +19,7 @@ export interface LockData {
 }
 
 export function getLockedVersion(lockFile: LockFile): LockData {
-  const content = readFileSync(lockFile.path, "utf8");
+  const content = readTextFileSync(lockFile.path);
 
   let versions: Map<string, string>;
   let catalog: Record<string, string> | undefined;
