@@ -1,10 +1,6 @@
-import {
-  existsSync,
-  readdirSync,
-  readFileSync,
-  statSync,
-  writeFileSync,
-} from "node:fs";
+import { readDirSync } from "@std/fs/unstable-read-dir";
+import { readTextFileSync } from "@std/fs/unstable-read-text-file";
+import { writeTextFileSync } from "@std/fs/unstable-write-text-file";
 import { gray, green } from "@ryu/enogu";
 import {
   parsePnpmWorkspace,
@@ -17,6 +13,8 @@ import {
 } from "../package-json.ts";
 import { join } from "@std/path/join";
 import {
+  ensureDirSync,
+  ensureFileSync,
   type LockFile,
   type PackageManager,
   shouldPinVersion,
@@ -66,7 +64,7 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
     > = [];
 
     for (const packageJsonPath of packageJsonFiles) {
-      const content = readFileSync(packageJsonPath, "utf8");
+      const content = readTextFileSync(packageJsonPath);
       const packageJson = parsePackageJson(content);
       packageJsonContents.push({
         path: packageJsonPath,
@@ -89,7 +87,7 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
 
     // Include pnpm-workspace.yaml catalog entries in alignment calculation
     if (pnpmWorkspaceFile && lockFile?.type === "pnpm") {
-      const workspaceContent = readFileSync(pnpmWorkspaceFile, "utf8");
+      const workspaceContent = readTextFileSync(pnpmWorkspaceFile);
       const workspace = parsePnpmWorkspace(workspaceContent);
 
       if (workspace.catalog) {
@@ -186,14 +184,14 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
           dependencyTypes,
         );
 
-        writeFileSync(packageJsonPath, updatedContent);
+        writeTextFileSync(packageJsonPath, updatedContent);
         totalChanges = true;
       }
     }
 
     // Handle pnpm-workspace.yaml catalog pinning
     if (pnpmWorkspaceFile && lockFile?.type === "pnpm") {
-      const workspaceContent = readFileSync(pnpmWorkspaceFile, "utf8");
+      const workspaceContent = readTextFileSync(pnpmWorkspaceFile);
       const {
         content: updatedWorkspaceContent,
         hasChanges: workspaceChanges,
@@ -240,7 +238,7 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
           console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
         }
 
-        writeFileSync(pnpmWorkspaceFile, updatedWorkspaceContent);
+        writeTextFileSync(pnpmWorkspaceFile, updatedWorkspaceContent);
         totalChanges = true;
       }
     }
@@ -265,19 +263,19 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
 function getLockFiles(): LockFile[] {
   const lockFiles: LockFile[] = [];
 
-  if (existsSync("deno.lock")) {
+  if (ensureFileSync("deno.lock")) {
     lockFiles.push({ path: "deno.lock", type: "deno" });
   }
-  if (existsSync("bun.lock")) {
+  if (ensureFileSync("bun.lock")) {
     lockFiles.push({ path: "bun.lock", type: "bun" });
   }
-  if (existsSync("pnpm-lock.yaml")) {
+  if (ensureFileSync("pnpm-lock.yaml")) {
     lockFiles.push({ path: "pnpm-lock.yaml", type: "pnpm" });
   }
-  if (existsSync("yarn.lock")) {
+  if (ensureFileSync("yarn.lock")) {
     lockFiles.push({ path: "yarn.lock", type: "yarn" });
   }
-  if (existsSync("package-lock.json")) {
+  if (ensureFileSync("package-lock.json")) {
     lockFiles.push({ path: "package-lock.json", type: "npm" });
   }
 
@@ -298,9 +296,9 @@ function findPackageManagerFiles(): string[] {
   const packageFiles = ["package.json"];
 
   // Check for pnpm-workspace.yaml first
-  if (existsSync("pnpm-workspace.yaml")) {
+  if (ensureFileSync("pnpm-workspace.yaml")) {
     packageFiles.push("pnpm-workspace.yaml");
-    const workspaceContent = readFileSync("pnpm-workspace.yaml", "utf8");
+    const workspaceContent = readTextFileSync("pnpm-workspace.yaml");
     const workspaces = parsePnpmWorkspace(workspaceContent).packages || [];
 
     for (const workspace of workspaces) {
@@ -309,15 +307,14 @@ function findPackageManagerFiles(): string[] {
         // Support patterns like "packages/*", "packages/**", "apps/*", etc.
         if (workspace.endsWith("/*")) {
           const dir = workspace.slice(0, -2);
-          if (existsSync(dir)) {
+          if (ensureDirSync(dir)) {
             try {
-              const entries = readdirSync(dir);
-              for (const entry of entries) {
-                const entryPath = join(dir, entry);
+              for (const entry of readDirSync(dir)) {
+                const entryPath = join(dir, entry.name);
                 const packageJsonPath = join(entryPath, "package.json");
                 if (
-                  statSync(entryPath).isDirectory() &&
-                  existsSync(packageJsonPath)
+                  ensureDirSync(entryPath) &&
+                  ensureFileSync(packageJsonPath)
                 ) {
                   packageFiles.push(packageJsonPath);
                 }
@@ -329,15 +326,14 @@ function findPackageManagerFiles(): string[] {
         } else if (workspace.endsWith("/**")) {
           // Handle recursive patterns like "packages/**"
           const dir = workspace.slice(0, -3);
-          if (existsSync(dir)) {
+          if (ensureDirSync(dir)) {
             try {
               const findPackagesRecursively = (dirPath: string) => {
-                const entries = readdirSync(dirPath);
-                for (const entry of entries) {
-                  const entryPath = join(dirPath, entry);
-                  if (statSync(entryPath).isDirectory()) {
+                for (const entry of readDirSync(dirPath)) {
+                  const entryPath = join(dirPath, entry.name);
+                  if (ensureDirSync(entryPath)) {
                     const packageJsonPath = join(entryPath, "package.json");
-                    if (existsSync(packageJsonPath)) {
+                    if (ensureFileSync(packageJsonPath)) {
                       packageFiles.push(packageJsonPath);
                     }
                     // Recurse into subdirectories
@@ -357,7 +353,8 @@ function findPackageManagerFiles(): string[] {
           ? "package.json"
           : join(workspace, "package.json");
         if (
-          existsSync(packageJsonPath) && !packageFiles.includes(packageJsonPath)
+          ensureFileSync(packageJsonPath) &&
+          !packageFiles.includes(packageJsonPath)
         ) {
           packageFiles.push(packageJsonPath);
         }
@@ -366,8 +363,8 @@ function findPackageManagerFiles(): string[] {
   } else {
     // Fall back to package.json workspaces if no pnpm-workspace.yaml
     const rootPackageJson = "package.json";
-    if (existsSync(rootPackageJson)) {
-      const content = readFileSync(rootPackageJson, "utf8");
+    if (ensureFileSync(rootPackageJson)) {
+      const content = readTextFileSync(rootPackageJson);
       const rootPkg = parsePackageJson(content);
 
       if (rootPkg.workspaces) {
@@ -379,15 +376,14 @@ function findPackageManagerFiles(): string[] {
           // Simple glob pattern matching for common patterns like "packages/*"
           if (workspace.endsWith("/*")) {
             const dir = workspace.slice(0, -2);
-            if (existsSync(dir)) {
+            if (ensureDirSync(dir)) {
               try {
-                const entries = readdirSync(dir);
-                for (const entry of entries) {
-                  const entryPath = join(dir, entry);
+                for (const entry of readDirSync(dir)) {
+                  const entryPath = join(dir, entry.name);
                   const packageJsonPath = join(entryPath, "package.json");
                   if (
-                    statSync(entryPath).isDirectory() &&
-                    existsSync(packageJsonPath)
+                    ensureDirSync(entryPath) &&
+                    ensureFileSync(packageJsonPath)
                   ) {
                     packageFiles.push(packageJsonPath);
                   }
@@ -399,7 +395,7 @@ function findPackageManagerFiles(): string[] {
           } else {
             // Direct workspace path
             const packageJsonPath = join(workspace, "package.json");
-            if (existsSync(packageJsonPath)) {
+            if (ensureFileSync(packageJsonPath)) {
               packageFiles.push(packageJsonPath);
             }
           }
