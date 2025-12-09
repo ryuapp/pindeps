@@ -1,0 +1,23 @@
+{
+  "version": "5",
+  "specifiers": {
+    "jsr:@ryu/enogu@0.6": "0.6.2",
+    "npm:enogu@0.6": "0.6.2"
+  },
+  "jsr": {
+    "@ryu/enogu@0.6.2": {
+      "integrity": "3209720528773bcc5070c2df90778a9a3d04d11eca6a7f1601a0d38b17ef69f6"
+    }
+  },
+  "npm": {
+    "enogu@0.6.2": {
+      "integrity": "sha512-gPvPpHxTGn0J+izA6AsK+vQ1PSIQWRMoik7MqzDwfGt9LUcRoielQ2KHoDNYilpkmTjAYLU5d2TkhXNxHDsjHA=="
+    }
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@ryu/enogu@0.6",
+      "npm:enogu@0.6"
+    ]
+  }
+}

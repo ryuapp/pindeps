@@ -55,6 +55,10 @@ Deno.test("shouldPinVersion - jsr: protocol", () => {
   assertEquals(shouldPinVersion("jsr:0.6.2"), false);
   assertEquals(shouldPinVersion("jsr:1.0.0"), false);
   assertEquals(shouldPinVersion("jsr:1.0.0-beta.0"), false);
+  assertEquals(shouldPinVersion("jsr:@ryu/enogu@^0.6.2"), true);
+  assertEquals(shouldPinVersion("jsr:@ryu/enogu@~1.0.0"), true);
+  assertEquals(shouldPinVersion("jsr:@ryu/enogu@0.6.2"), false);
+  assertEquals(shouldPinVersion("jsr:@ryu/enogu@1.0.0"), false);
 });
 
 Deno.test("shouldPinVersion - npm: protocol", () => {
@@ -64,4 +68,14 @@ Deno.test("shouldPinVersion - npm: protocol", () => {
   assertEquals(shouldPinVersion("npm:@jsr/ryu__enogu@1.0.0"), false);
   assertEquals(shouldPinVersion("npm:package@^1.0.0"), true);
   assertEquals(shouldPinVersion("npm:package@1.0.0"), false);
+});
+
+Deno.test("shouldPinVersion - HTTP/HTTPS URLs", () => {
+  assertEquals(
+    shouldPinVersion("https://deno.land/x/enogu@0.6.0/mod.ts"),
+    false,
+  );
+  assertEquals(shouldPinVersion("http://example.com/example.js"), false);
+  assertEquals(shouldPinVersion("https://esm.sh/react@^18.0.0"), false);
+  assertEquals(shouldPinVersion("https://cdn.skypack.dev/react"), false);
 });

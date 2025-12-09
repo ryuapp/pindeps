@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@ryu/enogu": "jsr:@ryu/enogu@^0.6.0",
+    "enogu": "npm:enogu@^0.6.0"
+  }
+}

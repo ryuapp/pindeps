@@ -1,6 +1,9 @@
 import { assertEquals } from "@std/assert";
 import { parseDenoLock } from "./deno.ts";
 import denoLock from "../../testdata/polyrepo/deno.lock" with { type: "text" };
+import jsrNpmDenoLock from "../../testdata/deno/deno.lock" with {
+  type: "text",
+};
 
 Deno.test("parse deno.lock for polyrepo", () => {
   const versions = parseDenoLock(denoLock);
@@ -10,4 +13,14 @@ Deno.test("parse deno.lock for polyrepo", () => {
   assertEquals(versions.get("@hono/react-compat"), "0.0.3");
   // Deno unsupport peer dependencies
   // assertEquals(versions.get("react"), "19.1.1");
+});
+
+Deno.test("parse deno.lock for JSR and npm packages", () => {
+  const versions = parseDenoLock(jsrNpmDenoLock);
+
+  // JSR package: jsr:@ryu/enogu@~0.6.2
+  assertEquals(versions.get("@ryu/enogu"), "0.6.2");
+
+  // npm package: npm:enogu@~0.6.2
+  assertEquals(versions.get("enogu"), "0.6.2");
 });
