@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { parseYarnLock } from "./yarn.ts";
 import yarnLock from "../../testdata/polyrepo/yarn.lock" with { type: "text" };
+import jsrYarnLock from "../../testdata/jsr/yarn.lock" with { type: "text" };
 
 Deno.test("parse yarn.lock for polyrepo", () => {
   const versions = parseYarnLock(yarnLock);
@@ -10,4 +11,10 @@ Deno.test("parse yarn.lock for polyrepo", () => {
   assertEquals(versions.get("@hono/react-compat"), "0.0.3");
   // Yarn unsupport peer dependencies
   // assertEquals(versions.get("react"), "19.1.1");
+});
+
+Deno.test("parse yarn.lock for JSR packages", () => {
+  const versions = parseYarnLock(jsrYarnLock);
+
+  assertEquals(versions.get("@ryu/enogu"), "0.6.2");
 });

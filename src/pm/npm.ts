@@ -17,6 +17,7 @@ const NpmLockFileSchema = v.pipe(
       v.record(
         v.string(),
         v.object({
+          name: v.optional(v.string()),
           version: v.optional(v.string()),
           resolved: v.optional(v.string()),
           link: v.optional(v.boolean()),
@@ -42,7 +43,9 @@ export function parseNpmLock(content: string): Map<string, string> {
   if (lockFile.packages) {
     for (const [path, info] of Object.entries(lockFile.packages)) {
       if (path === "") continue; // Skip root package
-      const packageName = path.replace(/^node_modules\//, "");
+      // Use 'name' property if available (for aliased packages like npm:@jsr/...)
+      // Otherwise extract from path
+      const packageName = info.name || path.replace(/^node_modules\//, "");
       if (info.version) {
         versions.set(packageName, info.version);
       }

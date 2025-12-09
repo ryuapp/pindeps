@@ -18,9 +18,26 @@ export function shouldPinVersion(version: string): boolean {
     return false;
   }
 
+  // Extract version part from protocol prefixes (jsr:, npm:)
+  let versionToCheck = version;
+
+  // For jsr: prefix, extract the version after "jsr:"
+  if (version.startsWith("jsr:")) {
+    versionToCheck = version.slice(4); // Remove "jsr:"
+  }
+
+  // For npm: prefix, extract the version after the last "@"
+  // e.g., "npm:@jsr/ryu__enogu@0.6.2" -> "0.6.2"
+  if (version.startsWith("npm:")) {
+    const lastAtIndex = version.lastIndexOf("@");
+    if (lastAtIndex > 4) { // Make sure there's an @ after "npm:"
+      versionToCheck = version.slice(lastAtIndex + 1);
+    }
+  }
+
   // Check if version is not in the format 'number.number.number' or 'number.number.number-suffix'
   const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/;
-  return !semverRegex.test(version);
+  return !semverRegex.test(versionToCheck);
 }
 
 export function ensureFileSync(path: string): boolean {

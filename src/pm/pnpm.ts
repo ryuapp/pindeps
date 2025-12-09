@@ -154,7 +154,14 @@ export function parsePnpmLock(content: string): Map<string, string> {
         version && !version.startsWith("link:") && !version.startsWith("file:")
       ) {
         // Extract clean version number
-        const cleanVersion = version.split("_")[0].split("(")[0];
+        // Handle JSR packages like "@jsr/ryu__enogu@0.6.2"
+        let cleanVersion = version;
+        const lastAtIndex = version.lastIndexOf("@");
+        if (lastAtIndex > 0 && version.startsWith("@")) {
+          // For scoped packages like "@jsr/ryu__enogu@0.6.2", extract version after last @
+          cleanVersion = version.substring(lastAtIndex + 1);
+        }
+        cleanVersion = cleanVersion.split("_")[0].split("(")[0];
         versions.set(name, cleanVersion);
       }
     }

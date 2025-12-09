@@ -1,0 +1,7 @@
+{
+    "name": "jsr-npm-testdata",
+    "private": true,
+    "dependencies": {
+        "@ryu/enogu": "npm:@jsr/ryu__enogu@^0.6.2"
+    }
+}

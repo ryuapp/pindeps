@@ -6,6 +6,9 @@ import pnpmLock from "../../testdata/polyrepo/pnpm-lock.yaml" with {
 import pnpmWorkspaceLock from "../../testdata/pnpm-workspace/pnpm-lock.yaml" with {
   type: "text",
 };
+import jsrPnpmLock from "../../testdata/jsr/pnpm-lock.yaml" with {
+  type: "text",
+};
 
 Deno.test("parse pnpm-lock.yaml for polyrepo", () => {
   const versions = parsePnpmLock(pnpmLock);
@@ -25,4 +28,10 @@ Deno.test("parsePnpmLockForCatalogs - workspace lockfile", () => {
   // Test named catalogs (react18, react19)
   assertEquals(result.catalogs?.["react18"]?.["react"], "18.3.1");
   assertEquals(result.catalogs?.["react19"]?.["react"], "19.1.1");
+});
+
+Deno.test("parse pnpm-lock.yaml for JSR packages", () => {
+  const versions = parsePnpmLock(jsrPnpmLock);
+
+  assertEquals(versions.get("@ryu/enogu"), "0.6.2");
 });
