@@ -418,6 +418,23 @@ function pinDependencies(
   for (const [name, version] of Object.entries(deps)) {
     if (shouldPinVersion(version)) {
       let lockedVersion: string | undefined;
+      let prefix = "";
+      let lookupName = name;
+
+      // Extract prefix (jsr:, npm:, etc.)
+      const prefixMatch = version.match(/^(jsr:|npm:)/);
+      if (prefixMatch) {
+        prefix = prefixMatch[1];
+
+        // For npm: protocol, extract the actual package name
+        // e.g., "npm:@jsr/ryu__enogu@^0.6.2" -> "@jsr/ryu__enogu"
+        if (prefix === "npm:") {
+          const npmMatch = version.match(/^npm:(@?[^@]+)@/);
+          if (npmMatch) {
+            lookupName = npmMatch[1];
+          }
+        }
+      }
 
       if (version.startsWith("catalog:")) {
         // Handle catalog references
@@ -430,16 +447,25 @@ function pinDependencies(
           lockedVersion = lockedVersions.get(`catalog:${catalogName}:${name}`);
         }
       } else {
-        // Regular package lookup
-        lockedVersion = lockedVersions.get(name);
+        // Regular package lookup (use actual package name for npm: protocol)
+        lockedVersion = lockedVersions.get(lookupName);
       }
 
       if (lockedVersion) {
-        pinned[name] = lockedVersion;
+        // Preserve prefix (jsr:, npm:, etc.)
+        let pinnedVersion: string;
+        if (prefix === "npm:") {
+          // For npm: protocol, reconstruct the full specifier
+          // e.g., "npm:@jsr/ryu__enogu@0.6.2"
+          pinnedVersion = `${prefix}${lookupName}@${lockedVersion}`;
+        } else {
+          pinnedVersion = prefix + lockedVersion;
+        }
+        pinned[name] = pinnedVersion;
         const paddedName = name.padEnd(maxNameLength);
         const paddedVersion = version.padEnd(maxVersionLength);
         const oldVersion = gray(paddedVersion);
-        const newVersion = green(lockedVersion);
+        const newVersion = green(pinnedVersion);
         console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
       } else {
         pinned[name] = version;

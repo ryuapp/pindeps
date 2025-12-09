@@ -3,6 +3,9 @@ import { parseNpmLock } from "./npm.ts";
 import packageLockJson from "../../testdata/polyrepo/package-lock.json" with {
   type: "text",
 };
+import jsrNpmPackageLockJson from "../../testdata/jsr-npm/package-lock.json" with {
+  type: "text",
+};
 
 Deno.test("parse package-lock.json for polyrepo", () => {
   const versions = parseNpmLock(packageLockJson);
@@ -11,4 +14,12 @@ Deno.test("parse package-lock.json for polyrepo", () => {
   assertEquals(versions.get("enogu"), "0.6.2");
   assertEquals(versions.get("@hono/react-compat"), "0.0.3");
   assertEquals(versions.get("react"), "19.1.1");
+});
+
+Deno.test("parse package-lock.json for JSR packages via npm protocol", () => {
+  const versions = parseNpmLock(jsrNpmPackageLockJson);
+
+  // The actual package name in node_modules is @jsr/ryu__enogu
+  // but it's aliased as @ryu/enogu in package.json
+  assertEquals(versions.get("@jsr/ryu__enogu"), "0.6.2");
 });

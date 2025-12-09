@@ -64,8 +64,20 @@ function extractPackageNameFromYarnKey(key: string): string | null {
     return null;
   }
 
+  // Handle scoped packages: "@scope/package@jsr:^version"
+  let match = key.match(/^(@[^/]+\/[^@]+)@jsr:/);
+  if (match) {
+    return match[1];
+  }
+
+  // Handle regular packages: "package@jsr:^version"
+  match = key.match(/^([^@]+)@jsr:/);
+  if (match) {
+    return match[1];
+  }
+
   // Handle scoped packages: "@scope/package@npm:^version"
-  let match = key.match(/^(@[^/]+\/[^@]+)@npm:/);
+  match = key.match(/^(@[^/]+\/[^@]+)@npm:/);
   if (match) {
     return match[1];
   }

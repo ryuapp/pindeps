@@ -1,0 +1,22 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@ryu/enogu':
+        specifier: jsr:^0.6.2
+        version: '@jsr/ryu__enogu@0.6.2'
+
+packages:
+
+  '@jsr/ryu__enogu@0.6.2':
+    resolution: {integrity: sha512-xwYjaqwkXE4wLIzcpj1eUsNlYZZrB1U/oE+Yi9mOG+jgaq0k0P5gtbHmh3dzNAOVsBHeNkCPyhOfLB9X+GnRRA==, tarball: https://npm.jsr.io/~/11/@jsr/ryu__enogu/0.6.2.tgz}
+
+snapshots:
+
+  '@jsr/ryu__enogu@0.6.2': {}
