@@ -1,7 +1,7 @@
 {
   "name": "pindeps",
-  "version": "0.5.0",
-  "description": "A CLI to pin versions of dependencies, such as package.json",
+  "version": "0.6.0",
+  "description": "A CLI tool to pin dependency versions in JavaScript package managers",
   "license": "MIT",
   "repository": "ryuapp/pindeps",
   "type": "module",
