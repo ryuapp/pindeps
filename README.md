@@ -22,10 +22,10 @@ It parses lockfiles and pins versions in dependency files such as `package.json`
 npx pindeps
 ```
 
-Secure usage with Deno:
+Secure usage with Deno (v2.6.0 or higher):
 
 ```sh
-deno --no-lock -WR="." npm:pindeps
+deno x -WR="." pindeps
 ```
 
 ## Supported Package Managers
