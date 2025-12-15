@@ -11,6 +11,7 @@ import {
   type PackageJson,
   parsePackageJson,
 } from "../package-json.ts";
+import { parseDenoJson, updateDenoJsonContent } from "../deno-json.ts";
 import { join } from "@std/path/join";
 import {
   ensureDirSync,
@@ -33,9 +34,16 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
     const pnpmWorkspaceFile = pmFiles.find((file) =>
       file === "pnpm-workspace.yaml"
     );
+    const denoJsonFile = ensureFileSync("deno.json")
+      ? "deno.json"
+      : ensureFileSync("deno.jsonc")
+      ? "deno.jsonc"
+      : null;
 
-    if (packageJsonFiles.length === 0) {
-      console.error("❌ Error: package.json not found");
+    if (packageJsonFiles.length === 0 && !denoJsonFile) {
+      console.error(
+        "❌ Error: package.json or deno.json/deno.jsonc not found",
+      );
       return 1;
     }
 
@@ -80,6 +88,21 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
             if (shouldPinVersion(version)) {
               maxVersionLength = Math.max(maxVersionLength, version.length);
             }
+          }
+        }
+      }
+    }
+
+    // Include deno.json imports in alignment calculation
+    if (denoJsonFile && lockFile?.type === "deno") {
+      const denoJsonContent = readTextFileSync(denoJsonFile);
+      const denoJson = parseDenoJson(denoJsonContent);
+
+      if (denoJson.imports) {
+        for (const [name, version] of Object.entries(denoJson.imports)) {
+          maxNameLength = Math.max(maxNameLength, name.length);
+          if (shouldPinVersion(version)) {
+            maxVersionLength = Math.max(maxVersionLength, version.length);
           }
         }
       }
@@ -243,11 +266,57 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
       }
     }
 
+    // Handle deno.json pinning
+    if (denoJsonFile && lockFile?.type === "deno") {
+      const denoJsonContent = readTextFileSync(denoJsonFile);
+      const denoJson = parseDenoJson(denoJsonContent);
+
+      if (denoJson.imports) {
+        let hasChanges = false;
+        let hasOutput = false;
+
+        // Check if any imports will be pinned before processing
+        const willHaveChanges = Object.entries(denoJson.imports).some(
+          ([name, version]) => {
+            return shouldPinVersion(version) && lockedVersions.has(name);
+          },
+        );
+
+        if (willHaveChanges && !hasOutput) {
+          console.log(`\n${denoJsonFile}:`);
+          hasOutput = true;
+        }
+
+        const pinned = pinDependencies(
+          denoJson.imports,
+          lockedVersions,
+          maxNameLength,
+          maxVersionLength,
+        );
+
+        if (JSON.stringify(pinned) !== JSON.stringify(denoJson.imports)) {
+          denoJson.imports = pinned;
+          hasChanges = true;
+        }
+
+        if (hasChanges) {
+          const updatedContent = updateDenoJsonContent(
+            denoJsonContent,
+            denoJson,
+          );
+          writeTextFileSync(denoJsonFile, updatedContent);
+          totalChanges = true;
+        }
+      }
+    }
+
     if (totalChanges) {
       const lockFileName = getLockFileName(lockFile);
       const packageManager = getPackageManagerName(lockFile);
       const installCommand = packageManager === "yarn"
         ? "yarn"
+        : packageManager === "deno"
+        ? "deno install"
         : `${packageManager} install`;
       console.log(`\nℹ️ Run \`${installCommand}\` to update ${lockFileName}`);
     }
@@ -293,7 +362,12 @@ function getLockFileName(lockFile: LockFile): string | null {
 }
 
 function findPackageManagerFiles(): string[] {
-  const packageFiles = ["package.json"];
+  const packageFiles: string[] = [];
+
+  // Add package.json if it exists
+  if (ensureFileSync("package.json")) {
+    packageFiles.push("package.json");
+  }
 
   // Check for pnpm-workspace.yaml first
   if (ensureFileSync("pnpm-workspace.yaml")) {
@@ -433,6 +507,14 @@ function pinDependencies(
           if (npmMatch) {
             lookupName = npmMatch[1];
           }
+        } else if (prefix === "jsr:") {
+          // For jsr: protocol, extract the actual package name
+          // e.g., "jsr:@ryu/enogu@^0.6.2" -> "@ryu/enogu"
+          // Handle scoped packages like @scope/name
+          const jsrMatch = version.match(/^jsr:(@[^@/]+\/[^@]+|[^@]+)@/);
+          if (jsrMatch) {
+            lookupName = jsrMatch[1];
+          }
         }
       }
 
@@ -454,9 +536,9 @@ function pinDependencies(
       if (lockedVersion) {
         // Preserve prefix (jsr:, npm:, etc.)
         let pinnedVersion: string;
-        if (prefix === "npm:") {
-          // For npm: protocol, reconstruct the full specifier
-          // e.g., "npm:@jsr/ryu__enogu@0.6.2"
+        if (prefix === "npm:" || prefix === "jsr:") {
+          // For npm: and jsr: protocols, reconstruct the full specifier
+          // e.g., "npm:@jsr/ryu__enogu@0.6.2" or "jsr:@ryu/enogu@0.6.2"
           pinnedVersion = `${prefix}${lookupName}@${lockedVersion}`;
         } else {
           pinnedVersion = prefix + lockedVersion;

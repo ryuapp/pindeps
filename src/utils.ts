@@ -18,12 +18,24 @@ export function shouldPinVersion(version: string): boolean {
     return false;
   }
 
+  // HTTP/HTTPS URLs should not be pinned
+  if (version.startsWith("http://") || version.startsWith("https://")) {
+    return false;
+  }
+
   // Extract version part from protocol prefixes (jsr:, npm:)
   let versionToCheck = version;
 
-  // For jsr: prefix, extract the version after "jsr:"
+  // For jsr: prefix, extract the version after the last "@"
+  // e.g., "jsr:@ryu/enogu@0.6.2" -> "0.6.2"
   if (version.startsWith("jsr:")) {
-    versionToCheck = version.slice(4); // Remove "jsr:"
+    const lastAtIndex = version.lastIndexOf("@");
+    if (lastAtIndex > 4) { // Make sure there's an @ after "jsr:"
+      versionToCheck = version.slice(lastAtIndex + 1);
+    } else {
+      // No package name specified, just version after "jsr:"
+      versionToCheck = version.slice(4); // Remove "jsr:"
+    }
   }
 
   // For npm: prefix, extract the version after the last "@"

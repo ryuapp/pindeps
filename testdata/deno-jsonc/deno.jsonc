@@ -1,0 +1,11 @@
+{
+  // Deno configuration with comments
+  // This file supports JSONC format
+  "imports": {
+    // JSR package for terminal colors
+    "@ryu/enogu": "jsr:@ryu/enogu@^0.6.0", // inline comment
+    // npm package
+    "enogu": "npm:enogu@^0.6.0" // another inline comment
+  }
+  // End of imports
+}
