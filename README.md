@@ -4,7 +4,8 @@
 [![npm](https://img.shields.io/npm/v/pindeps?labelColor=171717&color=39b54a)](https://www.npmjs.com/package/pindeps)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ryuapp/pindeps)
 
-pindeps is a CLI tool to pin dependency versions in JavaScript package managers. It parses lockfiles and pins versions in dependency files such as `package.json` and `pnpm-workspace.yaml`.
+pindeps is a CLI tool to pin dependency versions in JavaScript package managers.\
+It parses lockfiles and pins versions in dependency files such as `package.json` and `pnpm-workspace.yaml`.
 
 ```diff
 {
