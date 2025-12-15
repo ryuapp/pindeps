@@ -1,4 +1,4 @@
-import { parsePackageJson } from "../package-json.ts";
+import { parse } from "@david/jsonc-morph";
 
 // Extracted the logic for updating package.json content to a utility function
 export function updatePackageJsonContent(
@@ -8,29 +8,27 @@ export function updatePackageJsonContent(
     | readonly ["devDependencies"]
     | readonly ["dependencies", "devDependencies"],
 ): string {
-  let updatedContent = originalContent;
-
-  // Parse original content to get the actual old versions
-  const originalParsed = parsePackageJson(originalContent);
+  // Use jsonc-morph to preserve formatting
+  const root = parse(originalContent);
+  const rootObj = root.asObjectOrForce();
 
   // Update each dependency type section
   for (const depType of dependencyTypes) {
-    const originalDeps = originalParsed[depType];
-    if (!originalDeps) continue;
+    const depsToUpdate = pinnedDeps[depType];
+    if (!depsToUpdate || Object.keys(depsToUpdate).length === 0) continue;
 
-    // For each dependency that needs updating
-    for (const [pkgName, newVersion] of Object.entries(pinnedDeps[depType])) {
-      const oldVersion = originalDeps[pkgName];
-      if (oldVersion && oldVersion !== newVersion) {
-        // Create a regex that matches the exact dependency line
-        const escapedName = pkgName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = `("${escapedName}"\\s*:\\s*")[^\\"]*(")`;
-        const regex = new RegExp(pattern);
+    // Get or skip if the dependency section doesn't exist
+    const depsObj = rootObj.getIfObject(depType);
+    if (!depsObj) continue;
 
-        updatedContent = updatedContent.replace(regex, `$1${newVersion}$2`);
+    // Update each dependency
+    for (const [pkgName, newVersion] of Object.entries(depsToUpdate)) {
+      const prop = depsObj.get(pkgName);
+      if (prop) {
+        prop.setValue(newVersion);
       }
     }
   }
 
-  return updatedContent;
+  return root.toString();
 }
