@@ -114,8 +114,12 @@ export function parsePnpmLockForCatalogs(
   return { catalog, catalogs };
 }
 
-export function parsePnpmLock(content: string): Map<string, string> {
+export function parsePnpmLock(content: string): {
+  versions: Map<string, string>;
+  importers: Map<string, Map<string, string>>;
+} {
   const versions = new Map<string, string>();
+  const importers = new Map<string, Map<string, string>>();
 
   const result = v.safeParse(PnpmLockFileSchema, content);
 
@@ -144,7 +148,10 @@ export function parsePnpmLock(content: string): Map<string, string> {
   }
 
   // Handle root dependencies
-  const processDeps = (deps?: Record<string, { version: string } | string>) => {
+  const processDeps = (
+    deps?: Record<string, { version: string } | string>,
+    importerPath?: string,
+  ) => {
     if (!deps) return;
     for (const [name, value] of Object.entries(deps)) {
       const version = typeof value === "string"
@@ -162,28 +169,41 @@ export function parsePnpmLock(content: string): Map<string, string> {
           cleanVersion = version.substring(lastAtIndex + 1);
         }
         cleanVersion = cleanVersion.split("_")[0].split("(")[0];
+
+        // Store in global versions map
         versions.set(name, cleanVersion);
+
+        // Also store in importer-specific map if importerPath is provided
+        if (importerPath !== undefined) {
+          if (!importers.has(importerPath)) {
+            importers.set(importerPath, new Map());
+          }
+          importers.get(importerPath)!.set(name, cleanVersion);
+        }
       }
     }
   };
 
   // Process importers (for monorepos)
   if (lockFile.importers) {
-    for (const importer of Object.values(lockFile.importers)) {
+    for (const [importerPath, importer] of Object.entries(lockFile.importers)) {
       processDeps(
         importer.dependencies as Record<string, { version: string } | string>,
+        importerPath,
       );
       processDeps(
         importer.devDependencies as Record<
           string,
           { version: string } | string
         >,
+        importerPath,
       );
       processDeps(
         importer.optionalDependencies as Record<
           string,
           { version: string } | string
         >,
+        importerPath,
       );
     }
   } else {
@@ -207,7 +227,7 @@ export function parsePnpmLock(content: string): Map<string, string> {
     versions.set(`catalog:${key}`, version);
   }
 
-  return versions;
+  return { versions, importers };
 }
 
 export function resolveCatalogVersion(

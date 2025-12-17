@@ -64,6 +64,25 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
     }
     const lockedVersions = lockData.versions;
 
+    // Find workspace files if in deno workspace
+    const denoWorkspaceFiles = lockFile.type === "deno" && lockData.importers
+      ? findDenoWorkspaceFiles(lockData.importers)
+      : [];
+
+    // Add deno workspace package.json files to packageJsonFiles
+    if (lockFile.type === "deno" && lockData.importers) {
+      for (const [importerPath] of lockData.importers) {
+        if (importerPath === ".") continue;
+        const packageJsonPath = join(importerPath, "package.json");
+        if (
+          ensureFileSync(packageJsonPath) &&
+          !packageJsonFiles.includes(packageJsonPath)
+        ) {
+          packageJsonFiles.push(packageJsonPath);
+        }
+      }
+    }
+
     // Calculate max package name and version length across all package.json files for alignment
     let maxNameLength = 0;
     let maxVersionLength = 0;
@@ -96,6 +115,21 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
     // Include deno.json imports in alignment calculation
     if (denoJsonFile && lockFile?.type === "deno") {
       const denoJsonContent = readTextFileSync(denoJsonFile);
+      const denoJson = parseDenoJson(denoJsonContent);
+
+      if (denoJson.imports) {
+        for (const [name, version] of Object.entries(denoJson.imports)) {
+          maxNameLength = Math.max(maxNameLength, name.length);
+          if (shouldPinVersion(version)) {
+            maxVersionLength = Math.max(maxVersionLength, version.length);
+          }
+        }
+      }
+    }
+
+    // Include workspace deno.json files in alignment calculation
+    for (const workspaceDenoJsonFile of denoWorkspaceFiles) {
+      const denoJsonContent = readTextFileSync(workspaceDenoJsonFile);
       const denoJson = parseDenoJson(denoJsonContent);
 
       if (denoJson.imports) {
@@ -168,6 +202,13 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
       let hasChanges = false;
       let hasOutput = false;
 
+      // Determine which version map to use for this package
+      const versionsToUse = getVersionsForPackage(
+        packageJsonPath,
+        lockedVersions,
+        lockData.importers,
+      );
+
       // Process all dependency types
       for (const depType of dependencyTypes) {
         if (packageJson[depType]) {
@@ -176,7 +217,7 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
           // Check if any dependencies will be pinned before processing
           const willHaveChanges = Object.entries(originalDeps).some(
             ([name, version]) => {
-              return shouldPinVersion(version) && lockedVersions.has(name);
+              return shouldPinVersion(version) && versionsToUse.has(name);
             },
           );
 
@@ -187,7 +228,7 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
 
           const pinned = pinDependencies(
             originalDeps,
-            lockedVersions,
+            versionsToUse,
             maxNameLength,
             maxVersionLength,
           );
@@ -266,46 +307,59 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
       }
     }
 
-    // Handle deno.json pinning
-    if (denoJsonFile && lockFile?.type === "deno") {
-      const denoJsonContent = readTextFileSync(denoJsonFile);
-      const denoJson = parseDenoJson(denoJsonContent);
+    // Handle deno.json pinning (root and workspace files)
+    if (lockFile?.type === "deno") {
+      const allDenoJsonFiles = denoJsonFile
+        ? [denoJsonFile, ...denoWorkspaceFiles]
+        : denoWorkspaceFiles;
 
-      if (denoJson.imports) {
-        let hasChanges = false;
-        let hasOutput = false;
+      for (const currentDenoJsonFile of allDenoJsonFiles) {
+        const denoJsonContent = readTextFileSync(currentDenoJsonFile);
+        const denoJson = parseDenoJson(denoJsonContent);
 
-        // Check if any imports will be pinned before processing
-        const willHaveChanges = Object.entries(denoJson.imports).some(
-          ([name, version]) => {
-            return shouldPinVersion(version) && lockedVersions.has(name);
-          },
-        );
+        if (denoJson.imports) {
+          let hasChanges = false;
+          let hasOutput = false;
 
-        if (willHaveChanges && !hasOutput) {
-          console.log(`\n${denoJsonFile}:`);
-          hasOutput = true;
-        }
-
-        const pinned = pinDependencies(
-          denoJson.imports,
-          lockedVersions,
-          maxNameLength,
-          maxVersionLength,
-        );
-
-        if (JSON.stringify(pinned) !== JSON.stringify(denoJson.imports)) {
-          denoJson.imports = pinned;
-          hasChanges = true;
-        }
-
-        if (hasChanges) {
-          const updatedContent = updateDenoJsonContent(
-            denoJsonContent,
-            denoJson,
+          // Determine which version map to use for this deno.json
+          const versionsToUse = getVersionsForDenoJson(
+            currentDenoJsonFile,
+            lockedVersions,
+            lockData.importers,
           );
-          writeTextFileSync(denoJsonFile, updatedContent);
-          totalChanges = true;
+
+          // Check if any imports will be pinned before processing
+          const willHaveChanges = Object.entries(denoJson.imports).some(
+            ([name, version]) => {
+              return shouldPinVersion(version) && versionsToUse.has(name);
+            },
+          );
+
+          if (willHaveChanges && !hasOutput) {
+            console.log(`\n${currentDenoJsonFile}:`);
+            hasOutput = true;
+          }
+
+          const pinned = pinDependencies(
+            denoJson.imports,
+            versionsToUse,
+            maxNameLength,
+            maxVersionLength,
+          );
+
+          if (JSON.stringify(pinned) !== JSON.stringify(denoJson.imports)) {
+            denoJson.imports = pinned;
+            hasChanges = true;
+          }
+
+          if (hasChanges) {
+            const updatedContent = updateDenoJsonContent(
+              denoJsonContent,
+              denoJson,
+            );
+            writeTextFileSync(currentDenoJsonFile, updatedContent);
+            totalChanges = true;
+          }
         }
       }
     }
@@ -479,6 +533,83 @@ function findPackageManagerFiles(): string[] {
   }
 
   return packageFiles;
+}
+
+function getVersionsForFile(
+  filePath: string,
+  globalVersions: Map<string, string>,
+  importers?: Map<string, Map<string, string>>,
+): Map<string, string> {
+  if (!importers || importers.size === 0) {
+    return globalVersions;
+  }
+
+  // Convert Windows path to forward slashes for matching
+  const normalizedPath = filePath.replace(/\\/g, "/");
+
+  // Try to find importer by matching path
+  // package.json / deno.json -> "."
+  // apps/api/package.json -> "apps/api"
+  // packages/react2/deno.json -> "packages/react2"
+  let importerPath = ".";
+  const rootFiles = ["package.json", "deno.json", "deno.jsonc"];
+  if (!rootFiles.includes(normalizedPath)) {
+    // Remove /package.json, /deno.json, or /deno.jsonc from the end
+    importerPath = normalizedPath.replace(
+      /\/(package\.json|deno\.json|deno\.jsonc)$/,
+      "",
+    );
+  }
+
+  const importerVersions = importers.get(importerPath);
+  if (importerVersions && importerVersions.size > 0) {
+    // Merge importer-specific versions with global versions
+    const merged = new Map(globalVersions);
+    for (const [key, value] of importerVersions) {
+      merged.set(key, value);
+    }
+    return merged;
+  }
+
+  return globalVersions;
+}
+
+function getVersionsForPackage(
+  packageJsonPath: string,
+  globalVersions: Map<string, string>,
+  importers?: Map<string, Map<string, string>>,
+): Map<string, string> {
+  return getVersionsForFile(packageJsonPath, globalVersions, importers);
+}
+
+function getVersionsForDenoJson(
+  denoJsonPath: string,
+  globalVersions: Map<string, string>,
+  importers?: Map<string, Map<string, string>>,
+): Map<string, string> {
+  return getVersionsForFile(denoJsonPath, globalVersions, importers);
+}
+
+function findDenoWorkspaceFiles(
+  importers: Map<string, Map<string, string>>,
+): string[] {
+  const denoJsonFiles: string[] = [];
+
+  for (const [importerPath] of importers) {
+    if (importerPath === ".") continue; // Root is handled separately
+
+    // Check for deno.json or deno.jsonc in the workspace member directory
+    const denoJsonPath = join(importerPath, "deno.json");
+    const denoJsoncPath = join(importerPath, "deno.jsonc");
+
+    if (ensureFileSync(denoJsonPath)) {
+      denoJsonFiles.push(denoJsonPath);
+    } else if (ensureFileSync(denoJsoncPath)) {
+      denoJsonFiles.push(denoJsoncPath);
+    }
+  }
+
+  return denoJsonFiles;
 }
 
 function pinDependencies(

@@ -16,6 +16,7 @@ export interface LockData {
   versions: Map<string, string>;
   catalog?: Record<string, string>;
   catalogs?: Record<string, Record<string, string>>;
+  importers?: Map<string, Map<string, string>>;
 }
 
 export function getLockedVersion(lockFile: LockFile): LockData {
@@ -24,23 +25,38 @@ export function getLockedVersion(lockFile: LockFile): LockData {
   let versions: Map<string, string>;
   let catalog: Record<string, string> | undefined;
   let catalogs: Record<string, Record<string, string>> | undefined;
+  let importers: Map<string, Map<string, string>> | undefined;
 
   switch (lockFile.type) {
     case "deno":
-      versions = parseDenoLock(content);
+      {
+        const denoLockData = parseDenoLock(content);
+        versions = denoLockData.versions;
+        importers = denoLockData.importers;
+      }
       break;
     case "bun":
-      versions = parseBunLock(content);
+      {
+        const bunLockData = parseBunLock(content);
+        versions = bunLockData.versions;
+        importers = bunLockData.importers;
+      }
       break;
     case "yarn":
-      versions = parseYarnLock(content);
+      {
+        const yarnLockData = parseYarnLock(content);
+        versions = yarnLockData.versions;
+        importers = yarnLockData.importers;
+      }
       break;
     case "npm":
       versions = parseNpmLock(content);
       break;
     case "pnpm":
       {
-        versions = parsePnpmLock(content);
+        const pnpmLockData = parsePnpmLock(content);
+        versions = pnpmLockData.versions;
+        importers = pnpmLockData.importers;
         const pnpmData = parsePnpmLockForCatalogs(content);
         catalog = pnpmData.catalog;
         catalogs = pnpmData.catalogs;
@@ -52,5 +68,5 @@ export function getLockedVersion(lockFile: LockFile): LockData {
       );
   }
 
-  return { versions, catalog, catalogs };
+  return { versions, catalog, catalogs, importers };
 }

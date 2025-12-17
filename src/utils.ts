@@ -12,6 +12,7 @@ export interface LockData {
   versions: Map<string, string>;
   catalog?: Record<string, string>;
   catalogs?: Record<string, Record<string, string>>;
+  importers?: Map<string, Map<string, string>>;
 }
 
 export function shouldPinVersion(version: string): boolean {

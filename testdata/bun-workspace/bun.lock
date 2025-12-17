@@ -1,0 +1,40 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "bun-workspace",
+    },
+    "packages/react1": {
+      "name": "react1",
+      "dependencies": {
+        "react": ">=19.1.0 && <19.2.0",
+      },
+    },
+    "packages/react2": {
+      "name": "react2",
+      "dependencies": {
+        "react": ">=19.0.0 && <19.1.0",
+      },
+    },
+    "packages/react3": {
+      "name": "react3",
+      "dependencies": {
+        "react": "^19.2.1",
+      },
+    },
+  },
+  "packages": {
+    "react": ["react@19.1.4", "", {}, "sha512-DHINL3PAmPUiK1uszfbKiXqfE03eszdt5BpVSuEAHb5nfmNPwnsy7g39h2t8aXFc/Bv99GH81s+j8dobtD+jOw=="],
+
+    "react1": ["react1@workspace:packages/react1"],
+
+    "react2": ["react2@workspace:packages/react2"],
+
+    "react3": ["react3@workspace:packages/react3"],
+
+    "react2/react": ["react@19.0.3", "", {}, "sha512-owzQanTgpB8GF7pVL6mUwZZyhKzFePi9++GkFk54i9PRU0jq+z7v9Mwg7PAZJYCiYl5YwcyQGGq5/PLkesd8nw=="],
+
+    "react3/react": ["react@19.2.3", "", {}, "sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA=="],
+  }
+}

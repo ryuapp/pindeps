@@ -34,7 +34,7 @@ Deno.test("E2E: Binary exists and is executable", async () => {
 });
 
 Deno.test("E2E: Pin dependencies in a simple project", async () => {
-  const projectDir = await copyTestData("e2e-simple");
+  const projectDir = await copyTestData("e2e/simple");
 
   // Run the CLI
   await $`node ${BIN_PATH}`.cwd(projectDir);

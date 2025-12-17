@@ -1,0 +1,31 @@
+{
+  "version": "5",
+  "specifiers": {
+    "npm:react@19.0": "19.0.3",
+    "npm:react@^19.2.3": "19.2.3"
+  },
+  "npm": {
+    "react@19.0.3": {
+      "integrity": "sha512-owzQanTgpB8GF7pVL6mUwZZyhKzFePi9++GkFk54i9PRU0jq+z7v9Mwg7PAZJYCiYl5YwcyQGGq5/PLkesd8nw=="
+    },
+    "react@19.2.3": {
+      "integrity": "sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA=="
+    }
+  },
+  "workspace": {
+    "members": {
+      "packages/react1": {
+        "packageJson": {
+          "dependencies": [
+            "npm:react@19.0"
+          ]
+        }
+      },
+      "packages/react2": {
+        "dependencies": [
+          "npm:react@^19.2.3"
+        ]
+      }
+    }
+  }
+}
