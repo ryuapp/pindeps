@@ -29,7 +29,7 @@ pnpm dlx pindeps
 bunx pindeps@latest
 
 # Secure usage with Deno (v2.6.0 or higher):
-dx -WR="." pindeps@latest
+dx -rWR="." pindeps
 ```
 
 ### `--dev` flag
