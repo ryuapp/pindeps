@@ -18,14 +18,26 @@ It parses lockfiles and pins versions in dependency files such as `package.json`
 
 ## Usage
 
+You can pin dependencies in your `package.json`, `pnpm-workspace.yaml`, and `deno.json(c)` by using the following command:
+
 ```sh
-npx pindeps
+npx pindeps@latest
+
+# Other package managers
+yarn dlx pindeps
+pnpm dlx pindeps
+bunx pindeps@latest
+
+# Secure usage with Deno (v2.6.0 or higher):
+dx -WR="." pindeps@latest
 ```
 
-Secure usage with Deno (v2.6.0 or higher):
+### `--dev` flag
+
+If you want to pin only `devDependencies`, you can use `--dev` flag:
 
 ```sh
-deno x -WR="." pindeps
+npx pindeps@latest --dev
 ```
 
 ## Supported Package Managers
