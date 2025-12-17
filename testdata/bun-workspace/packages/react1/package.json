@@ -1,0 +1,8 @@
+{
+  "name": "react1",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "react": ">=19.1.0 && <19.2.0"
+  }
+}

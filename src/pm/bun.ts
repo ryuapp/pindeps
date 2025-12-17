@@ -22,8 +22,12 @@ const BunLockFileSchema = v.pipe(
   }),
 );
 
-export function parseBunLock(content: string): Map<string, string> {
+export function parseBunLock(content: string): {
+  versions: Map<string, string>;
+  importers: Map<string, Map<string, string>>;
+} {
   const versions = new Map<string, string>();
+  const importers = new Map<string, Map<string, string>>();
 
   const result = v.safeParse(BunLockFileSchema, content);
   if (!result.success) {
@@ -31,6 +35,16 @@ export function parseBunLock(content: string): Map<string, string> {
   }
 
   const lockFile = result.output;
+
+  // Build workspace name → path mapping from workspaces field
+  const workspaceNameToPath = new Map<string, string>();
+  if (lockFile.workspaces) {
+    for (const [path, workspaceInfo] of Object.entries(lockFile.workspaces)) {
+      if (workspaceInfo.name) {
+        workspaceNameToPath.set(workspaceInfo.name, path);
+      }
+    }
+  }
 
   // Parse from packages section to get exact versions
   // The packages section contains the resolved versions, not the workspace ranges
@@ -42,6 +56,37 @@ export function parseBunLock(content: string): Map<string, string> {
         // First element in array is the specifier like "yaml@2.8.1"
         const specifier = String(packageInfo[0]);
 
+        // Check if this is a workspace-specific package (e.g., "react2/react")
+        // But skip scoped packages like "@scope/name"
+        const workspaceMatch = packageName.match(/^([^/@]+)\/(.+)$/);
+        if (workspaceMatch && !packageName.startsWith("@")) {
+          const [, workspaceName, pkgName] = workspaceMatch;
+          // Look up workspace path from name
+          const workspacePath = workspaceNameToPath.get(workspaceName);
+          if (!workspacePath) continue; // Skip if workspace not found
+
+          // Extract version from specifier
+          let match = specifier.match(/^(@[^/]+\/[^@]+)@([^@]+)$/);
+          if (match) {
+            const [, , version] = match;
+            if (!importers.has(workspacePath)) {
+              importers.set(workspacePath, new Map());
+            }
+            importers.get(workspacePath)!.set(pkgName, version);
+          } else {
+            match = specifier.match(/^([^@]+)@([^@]+)$/);
+            if (match) {
+              const [, , version] = match;
+              if (!importers.has(workspacePath)) {
+                importers.set(workspacePath, new Map());
+              }
+              importers.get(workspacePath)!.set(pkgName, version);
+            }
+          }
+          continue;
+        }
+
+        // Regular package (not workspace-specific)
         // Only process if packageName matches the package name in specifier exactly
         // Handle @scope/package@version format
         let match = specifier.match(/^(@[^/]+\/[^@]+)@([^@]+)$/);
@@ -64,5 +109,5 @@ export function parseBunLock(content: string): Map<string, string> {
     }
   }
 
-  return versions;
+  return { versions, importers };
 }

@@ -2,9 +2,10 @@
   "tasks": {
     "run": "deno run -WR src/main.ts",
     "test": "deno test --unstable-raw-imports --parallel src/",
-    "test:e2e": "deno test -WRE --allow-run tests/e2e_test.ts",
+    "test:e2e": "deno test -WRE --allow-run --parallel e2e/",
     "typecheck": "deno check . --unstable-raw-imports --unstable-tsgo",
-    "build": "deno -W=bin --unstable-bundle scripts/build-package.ts"
+    "build": "deno -W=bin --unstable-bundle scripts/build-package.ts",
+    "fix": "deno fmt && deno lint --fix"
   },
   "fmt": {
     "proseWrap": "preserve"

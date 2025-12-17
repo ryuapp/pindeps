@@ -29,8 +29,12 @@ const YarnLockFileSchema = v.pipe(
   ),
 );
 
-export function parseYarnLock(content: string): Map<string, string> {
+export function parseYarnLock(content: string): {
+  versions: Map<string, string>;
+  importers: Map<string, Map<string, string>>;
+} {
   const versions = new Map<string, string>();
+  const importers = new Map<string, Map<string, string>>();
 
   const result = v.safeParse(YarnLockFileSchema, content);
   if (!result.success) {
@@ -39,15 +43,14 @@ export function parseYarnLock(content: string): Map<string, string> {
 
   const lockFile = result.output;
 
+  // First pass: build a map of dependency ranges to resolved versions
+  const rangeToVersion = new Map<string, string>();
   for (const [key, packageInfo] of Object.entries(lockFile)) {
-    // Skip metadata and undefined entries
-    if (key === "__metadata" || !packageInfo) {
-      continue;
-    }
+    if (key === "__metadata" || !packageInfo) continue;
 
-    // Check if it's a package info with version (not metadata)
     if ("version" in packageInfo && typeof packageInfo.version === "string") {
-      // Extract package name from key
+      rangeToVersion.set(key, packageInfo.version);
+
       const packageName = extractPackageNameFromYarnKey(key);
       if (packageName) {
         versions.set(packageName, packageInfo.version);
@@ -55,7 +58,48 @@ export function parseYarnLock(content: string): Map<string, string> {
     }
   }
 
-  return versions;
+  // Second pass: process workspace entries
+  for (const [key, packageInfo] of Object.entries(lockFile)) {
+    if (key === "__metadata" || !packageInfo) continue;
+
+    // Check if this is a workspace entry
+    if (key.includes("@workspace:") && "resolution" in packageInfo) {
+      const resolution = packageInfo.resolution;
+      if (typeof resolution !== "string") continue;
+
+      // Extract workspace path from resolution
+      // e.g., "react1@workspace:packages/react1" → "packages/react1"
+      const workspaceMatch = resolution.match(/@workspace:(.+)$/);
+      if (!workspaceMatch) continue;
+
+      const workspacePath = workspaceMatch[1];
+
+      // Get dependencies for this workspace
+      if ("dependencies" in packageInfo && packageInfo.dependencies) {
+        const deps = packageInfo.dependencies as Record<
+          string,
+          string | number
+        >;
+        const workspaceVersions = new Map<string, string>();
+
+        for (const [depName, depRange] of Object.entries(deps)) {
+          if (typeof depRange !== "string") continue;
+
+          // Look up the resolved version for this range
+          const resolvedVersion = rangeToVersion.get(`${depName}@${depRange}`);
+          if (resolvedVersion) {
+            workspaceVersions.set(depName, resolvedVersion);
+          }
+        }
+
+        if (workspaceVersions.size > 0) {
+          importers.set(workspacePath, workspaceVersions);
+        }
+      }
+    }
+  }
+
+  return { versions, importers };
 }
 
 function extractPackageNameFromYarnKey(key: string): string | null {
