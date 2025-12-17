@@ -1,4 +1,5 @@
 import { statSync } from "@std/fs/unstable-stat";
+import { tryParse } from "@std/semver/try-parse";
 
 export type PackageManager = "npm" | "yarn" | "pnpm" | "bun" | "deno";
 
@@ -47,9 +48,10 @@ export function shouldPinVersion(version: string): boolean {
     }
   }
 
-  // Check if version is not in the format 'number.number.number' or 'number.number.number-suffix'
-  const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.]+)?$/;
-  return !semverRegex.test(versionToCheck);
+  // Use @std/semver to validate if it's a valid semver version
+  // If it's a valid semver (e.g., 1.0.0, 1.0.0-beta.0), don't pin it
+  // If it's a range (e.g., ^1.0.0, ~1.0.0, *), pin it
+  return !tryParse(versionToCheck);
 }
 
 export function ensureFileSync(path: string): boolean {
