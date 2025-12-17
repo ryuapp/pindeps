@@ -21,6 +21,7 @@
     "jsr:@std/path@1": "1.1.3",
     "jsr:@std/path@1.1.3": "1.1.3",
     "jsr:@std/path@^1.1.3": "1.1.3",
+    "jsr:@std/semver@1.0.7": "1.0.7",
     "jsr:@std/yaml@1.0.10": "1.0.10",
     "jsr:@valibot/valibot@1.2.0": "1.2.0"
   },
@@ -105,6 +106,9 @@
         "jsr:@std/internal"
       ]
     },
+    "@std/semver@1.0.7": {
+      "integrity": "7d5f65391762dc4358abde80fc3354086ddb40101f140295e60f290c138887d0"
+    },
     "@std/yaml@1.0.10": {
       "integrity": "245706ea3511cc50c8c6d00339c23ea2ffa27bd2c7ea5445338f8feff31fa58e"
     },
@@ -122,6 +126,7 @@
       "jsr:@std/fs@1.0.20",
       "jsr:@std/jsonc@1.0.2",
       "jsr:@std/path@1.1.3",
+      "jsr:@std/semver@1.0.7",
       "jsr:@std/yaml@1.0.10",
       "jsr:@valibot/valibot@1.2.0"
     ]

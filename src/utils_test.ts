@@ -47,6 +47,7 @@ Deno.test("shouldPinVersion - prerelease versions", () => {
   assertEquals(shouldPinVersion("1.0.0-beta3"), false);
   assertEquals(shouldPinVersion("10.20.30-rc1"), false);
   assertEquals(shouldPinVersion("16.0.0-beta.0"), false);
+  assertEquals(shouldPinVersion("0.0.0-experimental-1235"), false);
 });
 
 Deno.test("shouldPinVersion - jsr: protocol", () => {
@@ -68,6 +69,7 @@ Deno.test("shouldPinVersion - npm: protocol", () => {
   assertEquals(shouldPinVersion("npm:@jsr/ryu__enogu@1.0.0"), false);
   assertEquals(shouldPinVersion("npm:package@^1.0.0"), true);
   assertEquals(shouldPinVersion("npm:package@1.0.0"), false);
+  assertEquals(shouldPinVersion("npm:react@0.0.0-experimental-1235"), false);
 });
 
 Deno.test("shouldPinVersion - HTTP/HTTPS URLs", () => {
