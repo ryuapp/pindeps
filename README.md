@@ -42,29 +42,13 @@ npx pindeps@latest --dev
 
 ## Supported Package Managers
 
-The following package managers are currently supported:
-
-- npm
-  - package.json
-  - package-lock.json
-
-- Yarn
-  - package.json
-  - yarn.lock
-
-- pnpm
-  - package.json
-  - pnpm-workspace.yaml
-  - pnpm-lock.yaml
-
-- Bun
-  - package.json
-  - bun.lock
-
-- Deno
-  - package.json
-  - deno.json(c)
-  - deno.lock
+| Name     | Manifest                                                                                      | Lockfile            |
+| -------- | --------------------------------------------------------------------------------------------- | ------------------- |
+| **npm**  | `package.json`                                                                                | `package-lock.json` |
+| **Yarn** | `package.json`                                                                                | `yarn.lock`         |
+| **pnpm** | `package.json`, `pnpm-workspace.yaml`                                                         | `pnpm-lock.yaml`    |
+| **Bun**  | `package.json` ([with comments](https://bun.com/blog/bun-v1.2#jsonc-support-in-package-json)) | `bun.lock`          |
+| **Deno** | `package.json`, `deno.json`, `deno.jsonc`                                                     | `deno.lock`         |
 
 ## Feedback
 
