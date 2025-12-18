@@ -1,6 +1,9 @@
 import * as v from "@valibot/valibot";
+import { regex } from "arkregex";
 import { shouldPinVersion } from "./utils.ts";
 import { yamlSchema } from "./schema.ts";
+
+const regexSpecialChars = regex("[.*+?^${}()|[\\]\\\\]", "g");
 
 export const PnpmWorkspaceSchema = v.pipe(
   v.string(),
@@ -64,14 +67,14 @@ export function pinPnpmWorkspaceCatalogs(
         if (lockedVersion && lockedVersion !== version) {
           // Replace the version in the content
           const escapedName = packageName.replace(
-            /[.*+?^${}()|[\]\\]/g,
+            regexSpecialChars,
             "\\$&",
           );
           const escapedOldVersion = version.replace(
-            /[.*+?^${}()|[\]\\]/g,
+            regexSpecialChars,
             "\\$&",
           );
-          const pattern = new RegExp(
+          const pattern = regex(
             `(\\s+${escapedName}:\\s*["']?)${escapedOldVersion}(["']?)`,
             "g",
           );
@@ -101,20 +104,20 @@ export function pinPnpmWorkspaceCatalogs(
           if (lockedVersion && lockedVersion !== version) {
             // Replace the version in the content
             const escapedCatalogName = catalogName.replace(
-              /[.*+?^${}()|[\]\\]/g,
+              regexSpecialChars,
               "\\$&",
             );
             const escapedPackageName = packageName.replace(
-              /[.*+?^${}()|[\]\\]/g,
+              regexSpecialChars,
               "\\$&",
             );
             const escapedOldVersion = version.replace(
-              /[.*+?^${}()|[\]\\]/g,
+              regexSpecialChars,
               "\\$&",
             );
 
             // Look for the pattern under the specific catalog
-            const catalogSectionRegex = new RegExp(
+            const catalogSectionRegex = regex(
               `(\\s+${escapedCatalogName}:[\\s\\S]*?\\s+${escapedPackageName}:\\s*["']?)${escapedOldVersion}(["']?)`,
               "g",
             );

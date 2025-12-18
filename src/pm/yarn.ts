@@ -1,5 +1,14 @@
 import * as v from "@valibot/valibot";
+import { regex } from "arkregex";
 import { yamlSchema } from "../schema.ts";
+
+const workspaceResolutionPattern = regex("@workspace:(.+)$");
+const scopedJsrPattern = regex("^(@[^/]+/[^@]+)@jsr:");
+const regularJsrPattern = regex("^([^@]+)@jsr:");
+const scopedNpmPattern = regex("^(@[^/]+/[^@]+)@npm:");
+const regularNpmPattern = regex("^([^@]+)@npm:");
+const regularLegacyPattern = regex("^([^@]+)@[^@]+$");
+const scopedLegacyPattern = regex("^(@[^/]+/[^@]+)@[^@]+$");
 
 const YarnLockFileSchema = v.pipe(
   v.string(),
@@ -69,7 +78,7 @@ export function parseYarnLock(content: string): {
 
       // Extract workspace path from resolution
       // e.g., "react1@workspace:packages/react1" → "packages/react1"
-      const workspaceMatch = resolution.match(/@workspace:(.+)$/);
+      const workspaceMatch = resolution.match(workspaceResolutionPattern);
       if (!workspaceMatch) continue;
 
       const workspacePath = workspaceMatch[1];
@@ -109,37 +118,37 @@ function extractPackageNameFromYarnKey(key: string): string | null {
   }
 
   // Handle scoped packages: "@scope/package@jsr:^version"
-  let match = key.match(/^(@[^/]+\/[^@]+)@jsr:/);
+  let match = key.match(scopedJsrPattern);
   if (match) {
     return match[1];
   }
 
   // Handle regular packages: "package@jsr:^version"
-  match = key.match(/^([^@]+)@jsr:/);
+  match = key.match(regularJsrPattern);
   if (match) {
     return match[1];
   }
 
   // Handle scoped packages: "@scope/package@npm:^version"
-  match = key.match(/^(@[^/]+\/[^@]+)@npm:/);
+  match = key.match(scopedNpmPattern);
   if (match) {
     return match[1];
   }
 
   // Handle regular packages: "package@npm:^version"
-  match = key.match(/^([^@]+)@npm:/);
+  match = key.match(regularNpmPattern);
   if (match) {
     return match[1];
   }
 
   // Handle legacy yarn v1 format: "package@^version"
-  match = key.match(/^([^@]+)@[^@]+$/);
+  match = key.match(regularLegacyPattern);
   if (match) {
     return match[1];
   }
 
   // Handle scoped packages in legacy format: "@scope/package@^version"
-  match = key.match(/^(@[^/]+\/[^@]+)@[^@]+$/);
+  match = key.match(scopedLegacyPattern);
   if (match) {
     return match[1];
   }
