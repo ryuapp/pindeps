@@ -1,4 +1,8 @@
 import * as v from "@valibot/valibot";
+import { regex } from "arkregex";
+
+const packageSpecPattern = regex("^(.+?)@[^@]+$");
+const jsrResolvedPattern = regex("^jsr:(.+?)@([^@]+)$");
 
 const DenoLockFileSchema = v.pipe(
   v.string(),
@@ -62,7 +66,7 @@ export function parseDenoLock(content: string): {
 
     if (spec.startsWith("npm:")) {
       const specPart = spec.replace("npm:", "");
-      const specMatch = specPart.match(/^(.+?)@[^@]+$/);
+      const specMatch = specPart.match(packageSpecPattern);
       if (specMatch) {
         const [, packageName] = specMatch;
         if (!resolved.includes(":")) {
@@ -72,11 +76,11 @@ export function parseDenoLock(content: string): {
       }
     } else if (spec.startsWith("jsr:")) {
       const specPart = spec.replace("jsr:", "");
-      const specMatch = specPart.match(/^(.+?)@[^@]+$/);
+      const specMatch = specPart.match(packageSpecPattern);
       if (specMatch) {
         const [, packageName] = specMatch;
         if (resolved.startsWith("jsr:")) {
-          const resolvedMatch = resolved.match(/^jsr:(.+?)@([^@]+)$/);
+          const resolvedMatch = resolved.match(jsrResolvedPattern);
           if (resolvedMatch) {
             const [, , version] = resolvedMatch;
             return { name: packageName, version };

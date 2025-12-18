@@ -1,5 +1,10 @@
 import * as v from "@valibot/valibot";
+import { regex } from "arkregex";
 import { jsoncSchema } from "../schema.ts";
+
+const workspacePattern = regex("^([^/@]+)/(.+)$");
+const scopedPackagePattern = regex("^(@[^/]+/[^@]+)@([^@]+)$");
+const unscopedPackagePattern = regex("^([^@]+)@([^@]+)$");
 
 const BunLockFileSchema = v.pipe(
   v.string(),
@@ -58,7 +63,7 @@ export function parseBunLock(content: string): {
 
         // Check if this is a workspace-specific package (e.g., "react2/react")
         // But skip scoped packages like "@scope/name"
-        const workspaceMatch = packageName.match(/^([^/@]+)\/(.+)$/);
+        const workspaceMatch = packageName.match(workspacePattern);
         if (workspaceMatch && !packageName.startsWith("@")) {
           const [, workspaceName, pkgName] = workspaceMatch;
           // Look up workspace path from name
@@ -66,7 +71,7 @@ export function parseBunLock(content: string): {
           if (!workspacePath) continue; // Skip if workspace not found
 
           // Extract version from specifier
-          let match = specifier.match(/^(@[^/]+\/[^@]+)@([^@]+)$/);
+          let match = specifier.match(scopedPackagePattern);
           if (match) {
             const [, , version] = match;
             if (!importers.has(workspacePath)) {
@@ -74,7 +79,7 @@ export function parseBunLock(content: string): {
             }
             importers.get(workspacePath)!.set(pkgName, version);
           } else {
-            match = specifier.match(/^([^@]+)@([^@]+)$/);
+            match = specifier.match(unscopedPackagePattern);
             if (match) {
               const [, , version] = match;
               if (!importers.has(workspacePath)) {
@@ -89,7 +94,7 @@ export function parseBunLock(content: string): {
         // Regular package (not workspace-specific)
         // Only process if packageName matches the package name in specifier exactly
         // Handle @scope/package@version format
-        let match = specifier.match(/^(@[^/]+\/[^@]+)@([^@]+)$/);
+        let match = specifier.match(scopedPackagePattern);
         if (match) {
           const [, name, version] = match;
           if (packageName === name) {
@@ -97,7 +102,7 @@ export function parseBunLock(content: string): {
           }
         } else {
           // Handle regular package@version format
-          match = specifier.match(/^([^@]+)@([^@]+)$/);
+          match = specifier.match(unscopedPackagePattern);
           if (match) {
             const [, name, version] = match;
             if (packageName === name) {

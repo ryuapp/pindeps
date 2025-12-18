@@ -2,6 +2,7 @@ import { readDirSync } from "@std/fs/unstable-read-dir";
 import { readTextFileSync } from "@std/fs/unstable-read-text-file";
 import { writeTextFileSync } from "@std/fs/unstable-write-text-file";
 import { gray, green } from "@ryu/enogu";
+import { regex } from "arkregex";
 import {
   parsePnpmWorkspace,
   pinPnpmWorkspaceCatalogs,
@@ -22,6 +23,11 @@ import {
 } from "../utils.ts";
 import { getLockedVersion } from "../pm/mod.ts";
 import { updatePackageJsonContent } from "./utils.ts";
+
+const backslashPattern = regex("\\\\", "g");
+const prefixPattern = regex("^(jsr:|npm:)");
+const npmPackagePattern = regex("^npm:(@?[^@]+)@");
+const jsrPackagePattern = regex("^jsr:(@[^@/]+/[^@]+|[^@]+)@");
 
 export function runPinCommand(options: { dev?: boolean } = {}): number {
   const dependencyTypes = options.dev
@@ -545,7 +551,7 @@ function getVersionsForFile(
   }
 
   // Convert Windows path to forward slashes for matching
-  const normalizedPath = filePath.replace(/\\/g, "/");
+  const normalizedPath = filePath.replace(backslashPattern, "/");
 
   // Try to find importer by matching path
   // package.json / deno.json -> "."
@@ -627,14 +633,14 @@ function pinDependencies(
       let lookupName = name;
 
       // Extract prefix (jsr:, npm:, etc.)
-      const prefixMatch = version.match(/^(jsr:|npm:)/);
+      const prefixMatch = version.match(prefixPattern);
       if (prefixMatch) {
         prefix = prefixMatch[1];
 
         // For npm: protocol, extract the actual package name
         // e.g., "npm:@jsr/ryu__enogu@^0.6.2" -> "@jsr/ryu__enogu"
         if (prefix === "npm:") {
-          const npmMatch = version.match(/^npm:(@?[^@]+)@/);
+          const npmMatch = version.match(npmPackagePattern);
           if (npmMatch) {
             lookupName = npmMatch[1];
           }
@@ -642,7 +648,7 @@ function pinDependencies(
           // For jsr: protocol, extract the actual package name
           // e.g., "jsr:@ryu/enogu@^0.6.2" -> "@ryu/enogu"
           // Handle scoped packages like @scope/name
-          const jsrMatch = version.match(/^jsr:(@[^@/]+\/[^@]+|[^@]+)@/);
+          const jsrMatch = version.match(jsrPackagePattern);
           if (jsrMatch) {
             lookupName = jsrMatch[1];
           }

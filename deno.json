@@ -22,7 +22,8 @@
     "@std/semver": "jsr:@std/semver@1.0.7",
     "@std/yaml": "jsr:@std/yaml@1.0.10",
     "@std/jsonc": "jsr:@std/jsonc@1.0.2",
-    "@valibot/valibot": "jsr:@valibot/valibot@1.2.0"
+    "@valibot/valibot": "jsr:@valibot/valibot@1.2.0",
+    "arkregex": "npm:arkregex@0.0.5"
   },
   "exclude": [
     "testdata/*"

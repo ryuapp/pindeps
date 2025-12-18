@@ -1,4 +1,5 @@
 import { assertEquals } from "@std/assert";
+import { regex } from "arkregex";
 import { parseDenoJson, updateDenoJsonContent } from "./deno-json.ts";
 
 Deno.test("parse deno.json", () => {
@@ -206,8 +207,10 @@ Deno.test("updateDenoJsonContent preserves all comment types", () => {
   assertEquals(updated.includes("// Bottom level comment"), true);
 
   // Verify no comments are lost
-  const originalCommentCount = (originalContent.match(/\/\//g) || []).length;
-  const updatedCommentCount = (updated.match(/\/\//g) || []).length;
+  const commentPattern = regex("//", "g");
+  const originalCommentCount =
+    (originalContent.match(commentPattern) || []).length;
+  const updatedCommentCount = (updated.match(commentPattern) || []).length;
   assertEquals(updatedCommentCount, originalCommentCount);
 });
 
