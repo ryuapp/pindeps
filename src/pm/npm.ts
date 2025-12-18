@@ -27,8 +27,14 @@ const NpmLockFileSchema = v.pipe(
   }),
 );
 
-export function parseNpmLock(content: string): Map<string, string> {
+export function parseNpmLock(
+  content: string,
+): {
+  versions: Map<string, string>;
+  importers?: Map<string, Map<string, string>>;
+} {
   const versions = new Map<string, string>();
+  const importers = new Map<string, Map<string, string>>();
 
   const result = v.safeParse(NpmLockFileSchema, content);
   if (!result.success) {
@@ -43,12 +49,28 @@ export function parseNpmLock(content: string): Map<string, string> {
   if (lockFile.packages) {
     for (const [path, info] of Object.entries(lockFile.packages)) {
       if (path === "") continue; // Skip root package
+      if (info.link) continue; // Skip workspace links
+
+      if (!info.version) continue;
+
+      // Check if this is a workspace-specific package
+      if (path.includes("/node_modules/")) {
+        const nodeModulesIndex = path.indexOf("/node_modules/");
+        const workspacePath = path.substring(0, nodeModulesIndex);
+        const packageName = path.substring(nodeModulesIndex + 14); // "/node_modules/".length
+
+        if (!importers.has(workspacePath)) {
+          importers.set(workspacePath, new Map());
+        }
+        importers.get(workspacePath)!.set(packageName, info.version);
+        continue;
+      }
+
+      // Global package
       // Use 'name' property if available (for aliased packages like npm:@jsr/...)
       // Otherwise extract from path
       const packageName = info.name || path.replace(/^node_modules\//, "");
-      if (info.version) {
-        versions.set(packageName, info.version);
-      }
+      versions.set(packageName, info.version);
     }
   }
 
@@ -59,5 +81,5 @@ export function parseNpmLock(content: string): Map<string, string> {
     }
   }
 
-  return versions;
+  return { versions, importers: importers.size > 0 ? importers : undefined };
 }

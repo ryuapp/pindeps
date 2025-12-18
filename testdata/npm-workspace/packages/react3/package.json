@@ -1,0 +1,8 @@
+{
+  "name": "react3",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "react": "^19.2.1"
+  }
+}
