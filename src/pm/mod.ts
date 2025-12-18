@@ -50,7 +50,11 @@ export function getLockedVersion(lockFile: LockFile): LockData {
       }
       break;
     case "npm":
-      versions = parseNpmLock(content);
+      {
+        const npmLockData = parseNpmLock(content);
+        versions = npmLockData.versions;
+        importers = npmLockData.importers;
+      }
       break;
     case "pnpm":
       {
