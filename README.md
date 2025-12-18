@@ -10,8 +10,13 @@ It parses lockfiles and pins versions in dependency files such as `package.json`
 ```diff
 {
   "dependencies": {
+    "enogu": "0.7.0",
 -   "pindeps": "^0.2.0"
-+   "pindeps": "0.3.1"
++   "pindeps": "0.6.2"
+  },
+  "devDependencies": {
+-   "typescript": "~5.9.0"
++   "typescript": "5.9.3"
   }
 }
 ```
