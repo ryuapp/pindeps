@@ -57,3 +57,43 @@ Deno.test("E2E: Pin deno workspace with package.json and deno.json", async () =>
   // Cleanup
   await Deno.remove(projectDir, { recursive: true });
 });
+
+Deno.test("E2E: --check fails when deno workspace dependencies are not pinned", async () => {
+  const projectDir = await copyTestData("e2e/deno-workspace");
+
+  // Run the CLI with --check flag
+  const result = await $`node ${BIN_PATH} --check`.cwd(projectDir).noThrow();
+
+  // Verify exit code is 1 (failure)
+  assertEquals(result.code, 1);
+
+  // Verify files were NOT modified
+  const packageJsonPath = join(projectDir, "packages/react1/package.json");
+  const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
+  const reactVersion = packageJson.dependencies["react"] as string;
+  assertEquals(reactVersion, ">=19.0.0 && <19.1.0");
+
+  const denoJsonPath = join(projectDir, "packages/react2/deno.json");
+  const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
+  const reactImport = denoJson.imports["react"] as string;
+  assertEquals(reactImport, "npm:react@^19.2.3");
+
+  // Cleanup
+  await Deno.remove(projectDir, { recursive: true });
+});
+
+Deno.test("E2E: --check succeeds when deno workspace dependencies are pinned", async () => {
+  const projectDir = await copyTestData("e2e/deno-workspace");
+
+  // First, pin dependencies
+  await $`node ${BIN_PATH}`.cwd(projectDir);
+
+  // Then run --check
+  const result = await $`node ${BIN_PATH} --check`.cwd(projectDir);
+
+  // Verify exit code is 0 (success)
+  assertEquals(result.code, 0);
+
+  // Cleanup
+  await Deno.remove(projectDir, { recursive: true });
+});

@@ -1,0 +1,10 @@
+{
+  "name": "simple-dev-project",
+  "version": "1.0.0",
+  "dependencies": {
+    "enogu": "0.6.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,7 +1,7 @@
 import { readDirSync } from "@std/fs/unstable-read-dir";
 import { readTextFileSync } from "@std/fs/unstable-read-text-file";
 import { writeTextFileSync } from "@std/fs/unstable-write-text-file";
-import { gray, green } from "@ryu/enogu";
+import { bold, brightRed, gray, green, red } from "@ryu/enogu";
 import { regex } from "arkregex";
 import {
   parsePnpmWorkspace,
@@ -29,10 +29,13 @@ const prefixPattern = regex("^(jsr:|npm:)");
 const npmPackagePattern = regex("^npm:(@?[^@]+)@");
 const jsrPackagePattern = regex("^jsr:(@[^@/]+/[^@]+|[^@]+)@");
 
-export function runPinCommand(options: { dev?: boolean } = {}): number {
+export function runPinCommand(
+  options: { dev?: boolean; check?: boolean } = {},
+): number {
   const dependencyTypes = options.dev
     ? ["devDependencies"] as const
     : DEPENDENCY_TYPES;
+  const checkMode = options.check ?? false;
 
   try {
     const pmFiles = findPackageManagerFiles();
@@ -196,6 +199,8 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
     console.log(`🔒 Lockfile: ${lockFileName}`);
 
     let totalChanges = false;
+    let unpinnedCount = 0;
+    let totalChecked = 0;
 
     // Process each package.json file
     for (
@@ -232,12 +237,20 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
             hasOutput = true;
           }
 
-          const pinned = pinDependencies(
+          const {
+            pinned,
+            unpinnedCount: depUnpinnedCount,
+            totalCount: depTotalCount,
+          } = pinDependencies(
             originalDeps,
             versionsToUse,
             maxNameLength,
             maxVersionLength,
+            checkMode,
           );
+
+          unpinnedCount += depUnpinnedCount;
+          totalChecked += depTotalCount;
 
           if (JSON.stringify(pinned) !== JSON.stringify(originalDeps)) {
             (packageJson as Record<string, Record<string, string>>)[depType] =
@@ -248,13 +261,15 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
       }
 
       if (hasChanges) {
-        const updatedContent = updatePackageJsonContent(
-          originalContent,
-          packageJson as Record<string, Record<string, string>>,
-          dependencyTypes,
-        );
+        if (!checkMode) {
+          const updatedContent = updatePackageJsonContent(
+            originalContent,
+            packageJson as Record<string, Record<string, string>>,
+            dependencyTypes,
+          );
 
-        writeTextFileSync(packageJsonPath, updatedContent);
+          writeTextFileSync(packageJsonPath, updatedContent);
+        }
         totalChanges = true;
       }
     }
@@ -273,6 +288,9 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
 
       if (workspaceChanges) {
         console.log("\npnpm-workspace.yaml:");
+
+        unpinnedCount += changes.length;
+        totalChecked += changes.length;
 
         // Simplify names by removing prefixes
         const simplifiedChanges = changes.map((change) => {
@@ -303,12 +321,23 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
           const paddedVersion = change.oldVersion.padEnd(
             combinedMaxVersionLength,
           );
-          const oldVersion = gray(paddedVersion);
-          const newVersion = green(change.newVersion);
-          console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+
+          if (checkMode) {
+            // Check mode: red old version, green new version
+            const oldVersion = red(paddedVersion);
+            const newVersion = green(change.newVersion);
+            console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+          } else {
+            // Pin mode: gray old version, green new version
+            const oldVersion = gray(paddedVersion);
+            const newVersion = green(change.newVersion);
+            console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+          }
         }
 
-        writeTextFileSync(pnpmWorkspaceFile, updatedWorkspaceContent);
+        if (!checkMode) {
+          writeTextFileSync(pnpmWorkspaceFile, updatedWorkspaceContent);
+        }
         totalChanges = true;
       }
     }
@@ -346,12 +375,20 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
             hasOutput = true;
           }
 
-          const pinned = pinDependencies(
+          const {
+            pinned,
+            unpinnedCount: depUnpinnedCount,
+            totalCount: depTotalCount,
+          } = pinDependencies(
             denoJson.imports,
             versionsToUse,
             maxNameLength,
             maxVersionLength,
+            checkMode,
           );
+
+          unpinnedCount += depUnpinnedCount;
+          totalChecked += depTotalCount;
 
           if (JSON.stringify(pinned) !== JSON.stringify(denoJson.imports)) {
             denoJson.imports = pinned;
@@ -359,28 +396,44 @@ export function runPinCommand(options: { dev?: boolean } = {}): number {
           }
 
           if (hasChanges) {
-            const updatedContent = updateDenoJsonContent(
-              denoJsonContent,
-              denoJson,
-            );
-            writeTextFileSync(currentDenoJsonFile, updatedContent);
+            if (!checkMode) {
+              const updatedContent = updateDenoJsonContent(
+                denoJsonContent,
+                denoJson,
+              );
+              writeTextFileSync(currentDenoJsonFile, updatedContent);
+            }
             totalChanges = true;
           }
         }
       }
     }
 
-    if (totalChanges) {
-      const lockFileName = getLockFileName(lockFile);
-      const packageManager = getPackageManagerName(lockFile);
-      const installCommand = packageManager === "yarn"
-        ? "yarn"
-        : packageManager === "deno"
-        ? "deno install"
-        : `${packageManager} install`;
-      console.log(`\nℹ️ Run \`${installCommand}\` to update ${lockFileName}`);
+    if (checkMode) {
+      if (totalChanges) {
+        console.error(
+          `\n${
+            bold(brightRed("error"))
+          }: Found ${unpinnedCount} not pinned dependencies in ${totalChecked} dependencies`,
+        );
+        return 1;
+      } else {
+        console.log(`Checked ${totalChecked} dependencies`);
+        return 0;
+      }
+    } else {
+      if (totalChanges) {
+        const lockFileName = getLockFileName(lockFile);
+        const packageManager = getPackageManagerName(lockFile);
+        const installCommand = packageManager === "yarn"
+          ? "yarn"
+          : packageManager === "deno"
+          ? "deno install"
+          : `${packageManager} install`;
+        console.log(`\nℹ️ Run \`${installCommand}\` to update ${lockFileName}`);
+      }
+      console.log(`📌 Pinned ${lockedVersions.size} dependencies`);
     }
-    console.log(`📌 Pinned ${lockedVersions.size} dependencies`);
   } catch (error) {
     console.error("❌ Error:", error instanceof Error ? error.message : error);
     return 1;
@@ -623,10 +676,18 @@ function pinDependencies(
   lockedVersions: Map<string, string>,
   maxNameLength: number,
   maxVersionLength: number,
-): Record<string, string> {
+  checkMode = false,
+): {
+  pinned: Record<string, string>;
+  unpinnedCount: number;
+  totalCount: number;
+} {
   const pinned: Record<string, string> = {};
+  let unpinnedCount = 0;
+  let totalCount = 0;
 
   for (const [name, version] of Object.entries(deps)) {
+    totalCount++;
     if (shouldPinVersion(version)) {
       let lockedVersion: string | undefined;
       let prefix = "";
@@ -681,11 +742,23 @@ function pinDependencies(
           pinnedVersion = prefix + lockedVersion;
         }
         pinned[name] = pinnedVersion;
-        const paddedName = name.padEnd(maxNameLength);
-        const paddedVersion = version.padEnd(maxVersionLength);
-        const oldVersion = gray(paddedVersion);
-        const newVersion = green(pinnedVersion);
-        console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+        unpinnedCount++;
+
+        if (checkMode) {
+          // Check mode: red old version, green new version
+          const paddedName = name.padEnd(maxNameLength);
+          const paddedVersion = version.padEnd(maxVersionLength);
+          const oldVersion = red(paddedVersion);
+          const newVersion = green(pinnedVersion);
+          console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+        } else {
+          // Pin mode: gray old version, green new version
+          const paddedName = name.padEnd(maxNameLength);
+          const paddedVersion = version.padEnd(maxVersionLength);
+          const oldVersion = gray(paddedVersion);
+          const newVersion = green(pinnedVersion);
+          console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+        }
       } else {
         pinned[name] = version;
         console.log(`⚠️ ${name}: no locked version found`);
@@ -695,5 +768,5 @@ function pinDependencies(
     }
   }
 
-  return pinned;
+  return { pinned, unpinnedCount, totalCount };
 }
