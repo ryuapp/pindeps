@@ -203,9 +203,6 @@ export function runPinCommand(
       if (willHaveAnyChanges) break;
     }
 
-    const lockFileName = getLockFileName(lockFile);
-    console.log(`🔒 Lockfile: ${lockFileName}`);
-
     let totalChanges = false;
     let unpinnedCount = 0;
     let totalChecked = 0;
