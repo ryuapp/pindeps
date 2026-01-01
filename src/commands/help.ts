@@ -7,13 +7,15 @@ export function showHelp(): void {
 ${gray("USAGE")}: ${green("pindeps [OPTIONS]")}
 
 ${yellow("OPTIONS:")}
+  ${green("    --check")}     Check if dependencies are pinned (exit 1 if not)
   ${green("    --dev")}       Pin only devDependencies
   ${green("-h, --help")}      Show this help message
   ${green("    --version")}   Show version number
 
-${yellow("EXAMPLES")}: 
+${yellow("EXAMPLES")}:
   pindeps              Pin all dependencies
   pindeps --dev        Pin only devDependencies
+  pindeps --check      Check if all dependencies are pinned
 
 ${yellow("SUPPORTED PACKAGE MANAGERS:")}
   npm, Yarn, pnpm, Bun, Deno

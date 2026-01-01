@@ -16,7 +16,7 @@ function exit(code: number): void {
 function main(): void {
   const inputArgs = isDeno() ? Deno.args : globalThis.process.argv.slice(2);
   const args = parseArgs(inputArgs, {
-    boolean: ["version", "dev", "help"],
+    boolean: ["version", "dev", "help", "check"],
     alias: { h: "help" },
   });
 
@@ -30,7 +30,7 @@ function main(): void {
     exit(0);
   }
 
-  const exitCode = runPinCommand({ dev: args.dev });
+  const exitCode = runPinCommand({ dev: args.dev, check: args.check });
   exit(exitCode);
 }
 

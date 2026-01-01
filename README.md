@@ -45,6 +45,26 @@ If you want to pin only `devDependencies`, you can use `--dev` flag:
 npx pindeps@latest --dev
 ```
 
+### `--check` flag
+
+If you want to check if all dependencies are pinned without modifying files, you can use `--check` flag:
+
+```sh
+npx pindeps@latest --check
+```
+
+This command:
+
+- Exits with code 0 if all dependencies are pinned
+- Exits with code 1 if any dependencies are not pinned
+- Useful for CI/CD pipelines to ensure dependencies are pinned
+
+You can also combine it with `--dev` to check only `devDependencies`:
+
+```sh
+npx pindeps@latest --check --dev
+```
+
 ## Supported Package Managers
 
 | Name     | Manifest                                                                                      | Lockfile            |
