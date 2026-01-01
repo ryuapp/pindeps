@@ -121,3 +121,15 @@ Deno.test("E2E: --check --dev succeeds when devDependencies are pinned", async (
   // Cleanup
   await Deno.remove(projectDir, { recursive: true });
 });
+
+Deno.test("E2E: Unknown flag should fail with error", async () => {
+  const result = await $`node ${BIN_PATH} --heck`.stderr("piped").noThrow();
+
+  // Verify exit code is 1 (failure)
+  assertEquals(result.code, 1);
+
+  // Verify error message contains "unexpected argument"
+  const stderr = result.stderr;
+  assertEquals(stderr.includes("unexpected argument"), true);
+  assertEquals(stderr.includes("'--heck'"), true);
+});

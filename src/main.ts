@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { parseArgs } from "@std/cli/parse-args";
+import { bold, brightRed } from "@ryu/enogu";
 import { runPinCommand } from "./commands/pin.ts";
 import { showHelp } from "./commands/help.ts";
 import { showVersion } from "./commands/version.ts";
@@ -18,6 +19,16 @@ function main(): void {
   const args = parseArgs(inputArgs, {
     boolean: ["version", "dev", "help", "check"],
     alias: { h: "help" },
+    unknown: (arg: string) => {
+      if (arg.startsWith("-")) {
+        console.error(
+          `${bold(brightRed("error"))}: unexpected argument '${arg}' found`,
+        );
+        console.error("\nRun 'pindeps --help' for usage information.");
+        exit(1);
+      }
+      return false;
+    },
   });
 
   if (args.version) {

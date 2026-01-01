@@ -51,7 +51,9 @@ export function runPinCommand(
 
     if (packageJsonFiles.length === 0 && !denoJsonFile) {
       console.error(
-        "❌ Error: package.json or deno.json/deno.jsonc not found",
+        `${
+          bold(brightRed("error"))
+        }: package.json or deno.json/deno.jsonc not found`,
       );
       return 1;
     }
@@ -60,7 +62,9 @@ export function runPinCommand(
     const lockFile = getLockFiles().at(0);
     if (!lockFile) {
       console.error(
-        "❌ Error: No lockfile found (package-lock.json, yarn.lock, pnpm-lock.yaml, deno.lock or bun.lock)",
+        `${
+          bold(brightRed("error"))
+        }: No lockfile found (package-lock.json, yarn.lock, pnpm-lock.yaml, deno.lock or bun.lock)`,
       );
       return 1;
     }
@@ -68,7 +72,11 @@ export function runPinCommand(
     // Get locked versions from lockfile
     const lockData = getLockedVersion(lockFile);
     if (lockData.versions.size === 0) {
-      console.log("❌ Error: No lockfile found or unable to parse lockfile");
+      console.error(
+        `${
+          bold(brightRed("error"))
+        }: No lockfile found or unable to parse lockfile`,
+      );
       return 1;
     }
     const lockedVersions = lockData.versions;
@@ -194,9 +202,6 @@ export function runPinCommand(
       }
       if (willHaveAnyChanges) break;
     }
-
-    const lockFileName = getLockFileName(lockFile);
-    console.log(`🔒 Lockfile: ${lockFileName}`);
 
     let totalChanges = false;
     let unpinnedCount = 0;
@@ -435,7 +440,10 @@ export function runPinCommand(
       console.log(`📌 Pinned ${lockedVersions.size} dependencies`);
     }
   } catch (error) {
-    console.error("❌ Error:", error instanceof Error ? error.message : error);
+    console.error(
+      `${bold(brightRed("error"))}:`,
+      error instanceof Error ? error.message : error,
+    );
     return 1;
   }
   return 0;
@@ -761,7 +769,9 @@ function pinDependencies(
         }
       } else {
         pinned[name] = version;
-        console.log(`⚠️ ${name}: no locked version found`);
+        console.error(
+          `${bold(brightRed("error"))}: ${name}: no locked version found`,
+        );
       }
     } else {
       pinned[name] = version;
