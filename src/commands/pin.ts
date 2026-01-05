@@ -437,7 +437,17 @@ export function runPinCommand(
           : `${packageManager} install`;
         console.log(`\nℹ️ Run \`${installCommand}\` to update ${lockFileName}`);
       }
-      console.log(`📌 Pinned ${lockedVersions.size} dependencies`);
+      if (unpinnedCount === 0) {
+        console.log(`Checked ${totalChecked} dependencies`);
+        return 0;
+      }
+      if (unpinnedCount === totalChecked) {
+        console.log(`📌 Pinned ${totalChecked} dependencies`);
+        return 0;
+      }
+      console.log(
+        `📌 Pinned ${unpinnedCount} out of ${totalChecked} dependencies`,
+      );
     }
   } catch (error) {
     console.error(
