@@ -6,5 +6,8 @@
   "repository": "ryuapp/pindeps",
   "type": "module",
   "bin": "./bin",
-  "files": ["bin"]
+  "files": ["bin"],
+  "engines": {
+    "node": ">=20.16.0"
+  }
 }
