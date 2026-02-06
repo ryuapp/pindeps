@@ -68,6 +68,22 @@ const PnpmLockFileSchema = v.pipe(
   }),
 );
 
+function extractCatalogVersions(
+  catalogData: Record<
+    string,
+    string | { specifier: string; version: string }
+  >,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [packageName, packageInfo] of Object.entries(catalogData)) {
+    const version = typeof packageInfo === "string"
+      ? packageInfo
+      : packageInfo.version;
+    result[packageName] = version;
+  }
+  return result;
+}
+
 export function parsePnpmLockForCatalogs(
   content: string,
 ): {
@@ -92,21 +108,9 @@ export function parsePnpmLockForCatalogs(
       const [catalogName, catalogData] of Object.entries(lockFile.catalogs)
     ) {
       if (catalogName === "default") {
-        catalog = {};
-        for (const [packageName, packageInfo] of Object.entries(catalogData)) {
-          const version = typeof packageInfo === "string"
-            ? packageInfo
-            : packageInfo.version;
-          catalog[packageName] = version;
-        }
+        catalog = extractCatalogVersions(catalogData);
       } else {
-        catalogs[catalogName] = {};
-        for (const [packageName, packageInfo] of Object.entries(catalogData)) {
-          const version = typeof packageInfo === "string"
-            ? packageInfo
-            : packageInfo.version;
-          catalogs[catalogName][packageName] = version;
-        }
+        catalogs[catalogName] = extractCatalogVersions(catalogData);
       }
     }
   }

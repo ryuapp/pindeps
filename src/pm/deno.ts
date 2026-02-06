@@ -93,6 +93,19 @@ export function parseDenoLock(content: string): {
     return null;
   };
 
+  // Helper function to process an array of dependency specs
+  const processDependencySpecs = (
+    specs: string[],
+    targetMap: Map<string, string>,
+  ): void => {
+    for (const spec of specs) {
+      const info = extractPackageInfo(spec);
+      if (info) {
+        targetMap.set(info.name, info.version);
+      }
+    }
+  };
+
   // Process workspace members
   if (lockFile.workspace?.members) {
     for (
@@ -112,20 +125,16 @@ export function parseDenoLock(content: string): {
           };
         };
         if (pkgJsonMember.packageJson?.dependencies) {
-          for (const spec of pkgJsonMember.packageJson.dependencies) {
-            const info = extractPackageInfo(spec);
-            if (info) {
-              memberMap.set(info.name, info.version);
-            }
-          }
+          processDependencySpecs(
+            pkgJsonMember.packageJson.dependencies,
+            memberMap,
+          );
         }
         if (pkgJsonMember.packageJson?.devDependencies) {
-          for (const spec of pkgJsonMember.packageJson.devDependencies) {
-            const info = extractPackageInfo(spec);
-            if (info) {
-              memberMap.set(info.name, info.version);
-            }
-          }
+          processDependencySpecs(
+            pkgJsonMember.packageJson.devDependencies,
+            memberMap,
+          );
         }
       }
 
