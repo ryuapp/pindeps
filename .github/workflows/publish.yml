@@ -29,5 +29,3 @@ jobs:
         run: deno task build
       - name: Publish to npm
         run: deno x -r npm publish
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
