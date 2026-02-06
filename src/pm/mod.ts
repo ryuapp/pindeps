@@ -19,58 +19,29 @@ export interface LockData {
   importers?: Map<string, Map<string, string>>;
 }
 
+const LOCK_PARSERS = {
+  deno: parseDenoLock,
+  bun: parseBunLock,
+  yarn: parseYarnLock,
+  npm: parseNpmLock,
+  pnpm: parsePnpmLock,
+} as const;
+
 export function getLockedVersion(lockFile: LockFile): LockData {
   const content = readTextFileSync(lockFile.path);
+  const parser = LOCK_PARSERS[lockFile.type];
 
-  let versions: Map<string, string>;
-  let catalog: Record<string, string> | undefined;
-  let catalogs: Record<string, Record<string, string>> | undefined;
-  let importers: Map<string, Map<string, string>> | undefined;
-
-  switch (lockFile.type) {
-    case "deno":
-      {
-        const denoLockData = parseDenoLock(content);
-        versions = denoLockData.versions;
-        importers = denoLockData.importers;
-      }
-      break;
-    case "bun":
-      {
-        const bunLockData = parseBunLock(content);
-        versions = bunLockData.versions;
-        importers = bunLockData.importers;
-      }
-      break;
-    case "yarn":
-      {
-        const yarnLockData = parseYarnLock(content);
-        versions = yarnLockData.versions;
-        importers = yarnLockData.importers;
-      }
-      break;
-    case "npm":
-      {
-        const npmLockData = parseNpmLock(content);
-        versions = npmLockData.versions;
-        importers = npmLockData.importers;
-      }
-      break;
-    case "pnpm":
-      {
-        const pnpmLockData = parsePnpmLock(content);
-        versions = pnpmLockData.versions;
-        importers = pnpmLockData.importers;
-        const pnpmData = parsePnpmLockForCatalogs(content);
-        catalog = pnpmData.catalog;
-        catalogs = pnpmData.catalogs;
-      }
-      break;
-    default:
-      throw new Error(
-        `Unsupported lockfile type: ${lockFile.type satisfies never}`,
-      );
+  if (!parser) {
+    throw new Error(`Unsupported lockfile type: ${lockFile.type}`);
   }
 
-  return { versions, catalog, catalogs, importers };
+  const { versions, importers } = parser(content);
+
+  // pnpm is the only package manager that needs special catalog handling
+  if (lockFile.type === "pnpm") {
+    const { catalog, catalogs } = parsePnpmLockForCatalogs(content);
+    return { versions, importers, catalog, catalogs };
+  }
+
+  return { versions, importers };
 }

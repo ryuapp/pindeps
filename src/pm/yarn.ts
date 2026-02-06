@@ -117,40 +117,20 @@ function extractPackageNameFromYarnKey(key: string): string | null {
     return null;
   }
 
-  // Handle scoped packages: "@scope/package@jsr:^version"
-  let match = key.match(scopedJsrPattern);
-  if (match) {
-    return match[1];
-  }
+  const patterns = [
+    { pattern: scopedJsrPattern, type: "scoped JSR" },
+    { pattern: regularJsrPattern, type: "regular JSR" },
+    { pattern: scopedNpmPattern, type: "scoped npm" },
+    { pattern: regularNpmPattern, type: "regular npm" },
+    { pattern: regularLegacyPattern, type: "regular legacy" },
+    { pattern: scopedLegacyPattern, type: "scoped legacy" },
+  ];
 
-  // Handle regular packages: "package@jsr:^version"
-  match = key.match(regularJsrPattern);
-  if (match) {
-    return match[1];
-  }
-
-  // Handle scoped packages: "@scope/package@npm:^version"
-  match = key.match(scopedNpmPattern);
-  if (match) {
-    return match[1];
-  }
-
-  // Handle regular packages: "package@npm:^version"
-  match = key.match(regularNpmPattern);
-  if (match) {
-    return match[1];
-  }
-
-  // Handle legacy yarn v1 format: "package@^version"
-  match = key.match(regularLegacyPattern);
-  if (match) {
-    return match[1];
-  }
-
-  // Handle scoped packages in legacy format: "@scope/package@^version"
-  match = key.match(scopedLegacyPattern);
-  if (match) {
-    return match[1];
+  for (const { pattern } of patterns) {
+    const match = key.match(pattern);
+    if (match) {
+      return match[1];
+    }
   }
 
   return null;

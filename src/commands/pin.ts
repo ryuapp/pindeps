@@ -100,9 +100,7 @@ export function runPinCommand(
       }
     }
 
-    // Calculate max package name and version length across all package.json files for alignment
-    let maxNameLength = 0;
-    let maxVersionLength = 0;
+    // Read all package.json files
     const packageJsonContents: Array<
       { path: string; content: string; json: PackageJson }
     > = [];
@@ -115,75 +113,17 @@ export function runPinCommand(
         content,
         json: packageJson,
       });
-
-      for (const depType of dependencyTypes) {
-        if (packageJson[depType]) {
-          const deps = packageJson[depType] as Record<string, string>;
-          for (const [name, version] of Object.entries(deps)) {
-            maxNameLength = Math.max(maxNameLength, name.length);
-            if (shouldPinVersion(version)) {
-              maxVersionLength = Math.max(maxVersionLength, version.length);
-            }
-          }
-        }
-      }
     }
 
-    // Include deno.json imports in alignment calculation
-    if (denoJsonFile && lockFile?.type === "deno") {
-      const denoJsonContent = readTextFileSync(denoJsonFile);
-      const denoJson = parseDenoJson(denoJsonContent);
-
-      if (denoJson.imports) {
-        for (const [name, version] of Object.entries(denoJson.imports)) {
-          maxNameLength = Math.max(maxNameLength, name.length);
-          if (shouldPinVersion(version)) {
-            maxVersionLength = Math.max(maxVersionLength, version.length);
-          }
-        }
-      }
-    }
-
-    // Include workspace deno.json files in alignment calculation
-    for (const workspaceDenoJsonFile of denoWorkspaceFiles) {
-      const denoJsonContent = readTextFileSync(workspaceDenoJsonFile);
-      const denoJson = parseDenoJson(denoJsonContent);
-
-      if (denoJson.imports) {
-        for (const [name, version] of Object.entries(denoJson.imports)) {
-          maxNameLength = Math.max(maxNameLength, name.length);
-          if (shouldPinVersion(version)) {
-            maxVersionLength = Math.max(maxVersionLength, version.length);
-          }
-        }
-      }
-    }
-
-    // Include pnpm-workspace.yaml catalog entries in alignment calculation
-    if (pnpmWorkspaceFile && lockFile?.type === "pnpm") {
-      const workspaceContent = readTextFileSync(pnpmWorkspaceFile);
-      const workspace = parsePnpmWorkspace(workspaceContent);
-
-      if (workspace.catalog) {
-        for (const [name, version] of Object.entries(workspace.catalog)) {
-          maxNameLength = Math.max(maxNameLength, name.length);
-          if (shouldPinVersion(version)) {
-            maxVersionLength = Math.max(maxVersionLength, version.length);
-          }
-        }
-      }
-
-      if (workspace.catalogs) {
-        for (const catalog of Object.values(workspace.catalogs)) {
-          for (const [name, version] of Object.entries(catalog)) {
-            maxNameLength = Math.max(maxNameLength, name.length);
-            if (shouldPinVersion(version)) {
-              maxVersionLength = Math.max(maxVersionLength, version.length);
-            }
-          }
-        }
-      }
-    }
+    // Calculate max package name and version length across all files for alignment
+    const { maxNameLength, maxVersionLength } = calculateMaxLengths(
+      packageJsonContents,
+      denoJsonFile,
+      denoWorkspaceFiles,
+      pnpmWorkspaceFile,
+      lockFile,
+      dependencyTypes,
+    );
 
     // Check if there will be any changes across all package.json files
     let willHaveAnyChanges = false;
@@ -492,6 +432,73 @@ function getLockFileName(lockFile: LockFile): string | null {
   return lockFile ? lockFile.path : null;
 }
 
+/**
+ * Process workspace glob patterns and return matching package.json paths.
+ * Handles both "/*" and "/**" patterns.
+ * @param workspace - Workspace pattern (e.g., "packages/*", "packages/**", or direct path)
+ * @returns Array of package.json paths matching the pattern
+ */
+function processWorkspaceGlobs(workspace: string): string[] {
+  const packageJsonPaths: string[] = [];
+
+  // Handle glob patterns
+  if (workspace.includes("*")) {
+    // Support patterns like "packages/*", "apps/*", etc.
+    if (workspace.endsWith("/*")) {
+      const dir = workspace.slice(0, -2);
+      if (ensureDirSync(dir)) {
+        try {
+          for (const entry of readDirSync(dir)) {
+            const entryPath = join(dir, entry.name);
+            const packageJsonPath = join(entryPath, "package.json");
+            if (
+              ensureDirSync(entryPath) &&
+              ensureFileSync(packageJsonPath)
+            ) {
+              packageJsonPaths.push(packageJsonPath);
+            }
+          }
+        } catch {
+          // Ignore errors reading directory
+        }
+      }
+    } else if (workspace.endsWith("/**")) {
+      // Handle recursive patterns like "packages/**"
+      const dir = workspace.slice(0, -3);
+      if (ensureDirSync(dir)) {
+        try {
+          const findPackagesRecursively = (dirPath: string) => {
+            for (const entry of readDirSync(dirPath)) {
+              const entryPath = join(dirPath, entry.name);
+              if (ensureDirSync(entryPath)) {
+                const packageJsonPath = join(entryPath, "package.json");
+                if (ensureFileSync(packageJsonPath)) {
+                  packageJsonPaths.push(packageJsonPath);
+                }
+                // Recurse into subdirectories
+                findPackagesRecursively(entryPath);
+              }
+            }
+          };
+          findPackagesRecursively(dir);
+        } catch {
+          // Ignore errors reading directory
+        }
+      }
+    }
+  } else {
+    // Direct workspace path
+    const packageJsonPath = workspace === "."
+      ? "package.json"
+      : join(workspace, "package.json");
+    if (ensureFileSync(packageJsonPath)) {
+      packageJsonPaths.push(packageJsonPath);
+    }
+  }
+
+  return packageJsonPaths;
+}
+
 function findPackageManagerFiles(): string[] {
   const packageFiles: string[] = [];
 
@@ -507,61 +514,10 @@ function findPackageManagerFiles(): string[] {
     const workspaces = parsePnpmWorkspace(workspaceContent).packages || [];
 
     for (const workspace of workspaces) {
-      // Handle glob patterns
-      if (workspace.includes("*")) {
-        // Support patterns like "packages/*", "packages/**", "apps/*", etc.
-        if (workspace.endsWith("/*")) {
-          const dir = workspace.slice(0, -2);
-          if (ensureDirSync(dir)) {
-            try {
-              for (const entry of readDirSync(dir)) {
-                const entryPath = join(dir, entry.name);
-                const packageJsonPath = join(entryPath, "package.json");
-                if (
-                  ensureDirSync(entryPath) &&
-                  ensureFileSync(packageJsonPath)
-                ) {
-                  packageFiles.push(packageJsonPath);
-                }
-              }
-            } catch {
-              // Ignore errors reading directory
-            }
-          }
-        } else if (workspace.endsWith("/**")) {
-          // Handle recursive patterns like "packages/**"
-          const dir = workspace.slice(0, -3);
-          if (ensureDirSync(dir)) {
-            try {
-              const findPackagesRecursively = (dirPath: string) => {
-                for (const entry of readDirSync(dirPath)) {
-                  const entryPath = join(dirPath, entry.name);
-                  if (ensureDirSync(entryPath)) {
-                    const packageJsonPath = join(entryPath, "package.json");
-                    if (ensureFileSync(packageJsonPath)) {
-                      packageFiles.push(packageJsonPath);
-                    }
-                    // Recurse into subdirectories
-                    findPackagesRecursively(entryPath);
-                  }
-                }
-              };
-              findPackagesRecursively(dir);
-            } catch {
-              // Ignore errors reading directory
-            }
-          }
-        }
-      } else {
-        // Direct workspace path
-        const packageJsonPath = workspace === "."
-          ? "package.json"
-          : join(workspace, "package.json");
-        if (
-          ensureFileSync(packageJsonPath) &&
-          !packageFiles.includes(packageJsonPath)
-        ) {
-          packageFiles.push(packageJsonPath);
+      const paths = processWorkspaceGlobs(workspace);
+      for (const path of paths) {
+        if (!packageFiles.includes(path)) {
+          packageFiles.push(path);
         }
       }
     }
@@ -578,30 +534,10 @@ function findPackageManagerFiles(): string[] {
           : rootPkg.workspaces.packages || [];
 
         for (const workspace of workspaces) {
-          // Simple glob pattern matching for common patterns like "packages/*"
-          if (workspace.endsWith("/*")) {
-            const dir = workspace.slice(0, -2);
-            if (ensureDirSync(dir)) {
-              try {
-                for (const entry of readDirSync(dir)) {
-                  const entryPath = join(dir, entry.name);
-                  const packageJsonPath = join(entryPath, "package.json");
-                  if (
-                    ensureDirSync(entryPath) &&
-                    ensureFileSync(packageJsonPath)
-                  ) {
-                    packageFiles.push(packageJsonPath);
-                  }
-                }
-              } catch {
-                // Ignore errors reading directory
-              }
-            }
-          } else {
-            // Direct workspace path
-            const packageJsonPath = join(workspace, "package.json");
-            if (ensureFileSync(packageJsonPath)) {
-              packageFiles.push(packageJsonPath);
+          const paths = processWorkspaceGlobs(workspace);
+          for (const path of paths) {
+            if (!packageFiles.includes(path)) {
+              packageFiles.push(path);
             }
           }
         }
@@ -789,4 +725,91 @@ function pinDependencies(
   }
 
   return { pinned, unpinnedCount, totalCount };
+}
+
+function calculateMaxLengths(
+  packageJsonContents: Array<
+    { path: string; content: string; json: PackageJson }
+  >,
+  denoJsonFile: string | null,
+  denoWorkspaceFiles: string[],
+  pnpmWorkspaceFile: string | undefined,
+  lockFile: LockFile,
+  dependencyTypes: readonly string[],
+): { maxNameLength: number; maxVersionLength: number } {
+  let maxNameLength = 0;
+  let maxVersionLength = 0;
+
+  // Calculate from package.json files
+  for (const { json: packageJson } of packageJsonContents) {
+    for (const depType of dependencyTypes) {
+      if (packageJson[depType]) {
+        const deps = packageJson[depType] as Record<string, string>;
+        for (const [name, version] of Object.entries(deps)) {
+          maxNameLength = Math.max(maxNameLength, name.length);
+          if (shouldPinVersion(version)) {
+            maxVersionLength = Math.max(maxVersionLength, version.length);
+          }
+        }
+      }
+    }
+  }
+
+  // Include deno.json imports in alignment calculation
+  if (denoJsonFile && lockFile?.type === "deno") {
+    const denoJsonContent = readTextFileSync(denoJsonFile);
+    const denoJson = parseDenoJson(denoJsonContent);
+
+    if (denoJson.imports) {
+      for (const [name, version] of Object.entries(denoJson.imports)) {
+        maxNameLength = Math.max(maxNameLength, name.length);
+        if (shouldPinVersion(version)) {
+          maxVersionLength = Math.max(maxVersionLength, version.length);
+        }
+      }
+    }
+  }
+
+  // Include workspace deno.json files in alignment calculation
+  for (const workspaceDenoJsonFile of denoWorkspaceFiles) {
+    const denoJsonContent = readTextFileSync(workspaceDenoJsonFile);
+    const denoJson = parseDenoJson(denoJsonContent);
+
+    if (denoJson.imports) {
+      for (const [name, version] of Object.entries(denoJson.imports)) {
+        maxNameLength = Math.max(maxNameLength, name.length);
+        if (shouldPinVersion(version)) {
+          maxVersionLength = Math.max(maxVersionLength, version.length);
+        }
+      }
+    }
+  }
+
+  // Include pnpm-workspace.yaml catalog entries in alignment calculation
+  if (pnpmWorkspaceFile && lockFile?.type === "pnpm") {
+    const workspaceContent = readTextFileSync(pnpmWorkspaceFile);
+    const workspace = parsePnpmWorkspace(workspaceContent);
+
+    if (workspace.catalog) {
+      for (const [name, version] of Object.entries(workspace.catalog)) {
+        maxNameLength = Math.max(maxNameLength, name.length);
+        if (shouldPinVersion(version)) {
+          maxVersionLength = Math.max(maxVersionLength, version.length);
+        }
+      }
+    }
+
+    if (workspace.catalogs) {
+      for (const catalog of Object.values(workspace.catalogs)) {
+        for (const [name, version] of Object.entries(catalog)) {
+          maxNameLength = Math.max(maxNameLength, name.length);
+          if (shouldPinVersion(version)) {
+            maxVersionLength = Math.max(maxVersionLength, version.length);
+          }
+        }
+      }
+    }
+  }
+
+  return { maxNameLength, maxVersionLength };
 }

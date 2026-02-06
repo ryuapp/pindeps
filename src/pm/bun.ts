@@ -27,6 +27,24 @@ const BunLockFileSchema = v.pipe(
   }),
 );
 
+function extractVersionFromSpecifier(
+  specifier: string,
+): { name: string; version: string } | null {
+  let match = specifier.match(scopedPackagePattern);
+  if (match) {
+    const [, name, version] = match;
+    return { name, version };
+  }
+
+  match = specifier.match(unscopedPackagePattern);
+  if (match) {
+    const [, name, version] = match;
+    return { name, version };
+  }
+
+  return null;
+}
+
 export function parseBunLock(content: string): {
   versions: Map<string, string>;
   importers: Map<string, Map<string, string>>;
@@ -71,44 +89,21 @@ export function parseBunLock(content: string): {
           if (!workspacePath) continue; // Skip if workspace not found
 
           // Extract version from specifier
-          let match = specifier.match(scopedPackagePattern);
-          if (match) {
-            const [, , version] = match;
+          const extracted = extractVersionFromSpecifier(specifier);
+          if (extracted) {
             if (!importers.has(workspacePath)) {
               importers.set(workspacePath, new Map());
             }
-            importers.get(workspacePath)!.set(pkgName, version);
-          } else {
-            match = specifier.match(unscopedPackagePattern);
-            if (match) {
-              const [, , version] = match;
-              if (!importers.has(workspacePath)) {
-                importers.set(workspacePath, new Map());
-              }
-              importers.get(workspacePath)!.set(pkgName, version);
-            }
+            importers.get(workspacePath)!.set(pkgName, extracted.version);
           }
           continue;
         }
 
         // Regular package (not workspace-specific)
         // Only process if packageName matches the package name in specifier exactly
-        // Handle @scope/package@version format
-        let match = specifier.match(scopedPackagePattern);
-        if (match) {
-          const [, name, version] = match;
-          if (packageName === name) {
-            versions.set(name, version);
-          }
-        } else {
-          // Handle regular package@version format
-          match = specifier.match(unscopedPackagePattern);
-          if (match) {
-            const [, name, version] = match;
-            if (packageName === name) {
-              versions.set(name, version);
-            }
-          }
+        const extracted = extractVersionFromSpecifier(specifier);
+        if (extracted && packageName === extracted.name) {
+          versions.set(extracted.name, extracted.version);
         }
       }
     }
