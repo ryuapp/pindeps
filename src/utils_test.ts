@@ -81,3 +81,10 @@ Deno.test("shouldPinVersion - HTTP/HTTPS URLs", () => {
   assertEquals(shouldPinVersion("https://esm.sh/react@^18.0.0"), false);
   assertEquals(shouldPinVersion("https://cdn.skypack.dev/react"), false);
 });
+
+Deno.test("shouldPinVersion - non-package specifiers", () => {
+  assertEquals(shouldPinVersion("./main.ts"), false);
+  assertEquals(shouldPinVersion("../mod.ts"), false);
+  assertEquals(shouldPinVersion("/src/main.ts"), false);
+  assertEquals(shouldPinVersion("file:///tmp/main.ts"), false);
+});

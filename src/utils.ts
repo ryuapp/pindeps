@@ -20,6 +20,15 @@ export function shouldPinVersion(version: string): boolean {
     return false;
   }
 
+  if (
+    version.startsWith("./") ||
+    version.startsWith("../") ||
+    version.startsWith("/") ||
+    version.startsWith("file:")
+  ) {
+    return false;
+  }
+
   // HTTP/HTTPS URLs should not be pinned
   if (version.startsWith("http://") || version.startsWith("https://")) {
     return false;
