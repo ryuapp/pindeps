@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "enogu": "catalog:",
+    "react": "catalog:react18"
+  }
+}

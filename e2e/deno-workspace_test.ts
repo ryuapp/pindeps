@@ -97,3 +97,54 @@ Deno.test("E2E: --check succeeds when deno workspace dependencies are pinned", a
   // Cleanup
   await Deno.remove(projectDir, { recursive: true });
 });
+
+Deno.test("E2E: Pin deno catalog definitions", async () => {
+  const projectDir = await copyTestData("e2e/deno-catalog");
+
+  await $`node ${BIN_PATH}`.cwd(projectDir);
+
+  const denoJsonPath = join(projectDir, "deno.json");
+  const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
+  assertEquals(denoJson.catalog.enogu, "0.6.2");
+  assertEquals(denoJson.catalogs.dev.clsx, "1.2.1");
+  assertEquals(denoJson.catalogs.react18.react, "18.3.1");
+  assertEquals(denoJson.catalogs.react19.react, "19.2.6");
+
+  const packageJsonPath = join(projectDir, "packages/a/package.json");
+  const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
+  assertEquals(packageJson.dependencies.enogu, "catalog:");
+  assertEquals(packageJson.dependencies.react, "catalog:react18");
+
+  await Deno.remove(projectDir, { recursive: true });
+});
+
+Deno.test("E2E: --check fails when deno catalog definitions are not pinned", async () => {
+  const projectDir = await copyTestData("e2e/deno-catalog");
+
+  const result = await $`node ${BIN_PATH} --check`.cwd(projectDir).noThrow();
+  assertEquals(result.code, 1);
+
+  const denoJsonPath = join(projectDir, "deno.json");
+  const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
+  assertEquals(denoJson.catalog.enogu, "^0.6.0");
+  assertEquals(denoJson.catalogs.dev.clsx, "^1.2.1");
+  assertEquals(denoJson.catalogs.react18.react, "^18.2.0");
+  assertEquals(denoJson.catalogs.react19.react, "^19.0.0");
+
+  await Deno.remove(projectDir, { recursive: true });
+});
+
+Deno.test("E2E: --dev pins only deno catalogs used by devDependencies", async () => {
+  const projectDir = await copyTestData("e2e/deno-catalog");
+
+  await $`node ${BIN_PATH} --dev`.cwd(projectDir);
+
+  const denoJsonPath = join(projectDir, "deno.json");
+  const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
+  assertEquals(denoJson.catalog.enogu, "^0.6.0");
+  assertEquals(denoJson.catalogs.dev.clsx, "1.2.1");
+  assertEquals(denoJson.catalogs.react18.react, "^18.2.0");
+  assertEquals(denoJson.catalogs.react19.react, "^19.0.0");
+
+  await Deno.remove(projectDir, { recursive: true });
+});

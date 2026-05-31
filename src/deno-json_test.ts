@@ -7,6 +7,9 @@ Deno.test("parse deno.json", () => {
   "imports": {
     "@ryu/enogu": "jsr:@ryu/enogu@^0.6.2",
     "enogu": "npm:enogu@^0.6.2"
+  },
+  "catalog": {
+    "react": "^19.0.0"
   }
 }`;
 
@@ -15,6 +18,9 @@ Deno.test("parse deno.json", () => {
   assertEquals(denoJson.imports, {
     "@ryu/enogu": "jsr:@ryu/enogu@^0.6.2",
     "enogu": "npm:enogu@^0.6.2",
+  });
+  assertEquals(denoJson.catalog, {
+    "react": "^19.0.0",
   });
 });
 
@@ -122,6 +128,43 @@ Deno.test("updateDenoJsonContent adds new imports", () => {
     "@ryu/enogu": "jsr:@ryu/enogu@0.6.2",
     "enogu": "npm:enogu@0.6.2",
   });
+});
+
+Deno.test("updateDenoJsonContent updates catalog definitions", () => {
+  const originalContent = `{
+  "catalog": {
+    "enogu": "^0.6.0"
+  },
+  "catalogs": {
+    "react18": {
+      "react": "^18.2.0"
+    },
+    "react19": {
+      "react": "^19.0.0"
+    }
+  }
+}
+`;
+
+  const denoJson = parseDenoJson(originalContent);
+  denoJson.catalog = {
+    "enogu": "0.6.2",
+  };
+  denoJson.catalogs = {
+    "react18": {
+      "react": "18.3.1",
+    },
+    "react19": {
+      "react": "19.2.6",
+    },
+  };
+
+  const updated = updateDenoJsonContent(originalContent, denoJson);
+  const parsed = parseDenoJson(updated);
+
+  assertEquals(parsed.catalog?.enogu, "0.6.2");
+  assertEquals(parsed.catalogs?.react18?.react, "18.3.1");
+  assertEquals(parsed.catalogs?.react19?.react, "19.2.6");
 });
 
 Deno.test("updateDenoJsonContent preserves formatting with CRLF", () => {

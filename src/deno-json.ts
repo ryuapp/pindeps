@@ -4,11 +4,15 @@ import { parse } from "@david/jsonc-morph";
 
 export interface DenoJson {
   imports?: Record<string, string>;
+  catalog?: Record<string, string>;
+  catalogs?: Record<string, Record<string, string>>;
   [key: string]: unknown;
 }
 
 const DenoJsonSchema = v.looseObject({
   imports: v.optional(v.record(v.string(), v.string())),
+  catalog: v.optional(v.record(v.string(), v.string())),
+  catalogs: v.optional(v.record(v.string(), v.record(v.string(), v.string()))),
 });
 
 export function parseDenoJson(content: string): DenoJson {
@@ -25,7 +29,7 @@ export function updateDenoJsonContent(
   originalContent: string,
   denoJson: DenoJson,
 ): string {
-  if (!denoJson.imports) {
+  if (!denoJson.imports && !denoJson.catalog && !denoJson.catalogs) {
     return originalContent;
   }
 
@@ -33,18 +37,47 @@ export function updateDenoJsonContent(
   const root = parse(originalContent);
   const rootObj = root.asObjectOrForce();
 
-  // Get or create the imports object
-  const importsObj = rootObj.getIfObjectOrForce("imports");
+  if (denoJson.imports) {
+    // Get or create the imports object
+    const importsObj = rootObj.getIfObjectOrForce("imports");
 
-  // Update each import value
-  for (const [key, value] of Object.entries(denoJson.imports)) {
-    const prop = importsObj.get(key);
-    if (prop) {
-      // Update existing property
-      prop.setValue(value);
-    } else {
-      // Add new property
-      importsObj.append(key, value);
+    // Update each import value
+    for (const [key, value] of Object.entries(denoJson.imports)) {
+      const prop = importsObj.get(key);
+      if (prop) {
+        // Update existing property
+        prop.setValue(value);
+      } else {
+        // Add new property
+        importsObj.append(key, value);
+      }
+    }
+  }
+
+  if (denoJson.catalog) {
+    const catalogObj = rootObj.getIfObjectOrForce("catalog");
+    for (const [key, value] of Object.entries(denoJson.catalog)) {
+      const prop = catalogObj.get(key);
+      if (prop) {
+        prop.setValue(value);
+      } else {
+        catalogObj.append(key, value);
+      }
+    }
+  }
+
+  if (denoJson.catalogs) {
+    const catalogsObj = rootObj.getIfObjectOrForce("catalogs");
+    for (const [catalogName, catalog] of Object.entries(denoJson.catalogs)) {
+      const catalogObj = catalogsObj.getIfObjectOrForce(catalogName);
+      for (const [key, value] of Object.entries(catalog)) {
+        const prop = catalogObj.get(key);
+        if (prop) {
+          prop.setValue(value);
+        } else {
+          catalogObj.append(key, value);
+        }
+      }
     }
   }
 

@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "enogu": "catalog:",
+    "react": "catalog:react19"
+  },
+  "devDependencies": {
+    "clsx": "catalog:dev"
+  }
+}
