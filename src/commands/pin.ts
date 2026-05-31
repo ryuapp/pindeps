@@ -8,6 +8,11 @@ import {
   pinPnpmWorkspaceCatalogs,
 } from "../pnpm-workspace.ts";
 import {
+  type DenoCatalogChange,
+  getDenoCatalogVersions,
+  pinDenoJsonCatalogs,
+} from "../deno-catalog.ts";
+import {
   DEPENDENCY_TYPES,
   type PackageJson,
   parsePackageJson,
@@ -292,14 +297,47 @@ export function runPinCommand(
       const allDenoJsonFiles = denoJsonFile
         ? [denoJsonFile, ...denoWorkspaceFiles]
         : denoWorkspaceFiles;
+      const denoCatalogVersions = denoJsonFile
+        ? getDenoCatalogVersions(
+          packageJsonContents,
+          (path) =>
+            getVersionsForPackage(
+              path,
+              lockedVersions,
+              lockData.importers,
+            ),
+          dependencyTypes,
+        )
+        : undefined;
 
       for (const currentDenoJsonFile of allDenoJsonFiles) {
         const denoJsonContent = readTextFileSync(currentDenoJsonFile);
         const denoJson = parseDenoJson(denoJsonContent);
+        let denoJsonHasChanges = false;
+
+        if (currentDenoJsonFile === denoJsonFile && denoCatalogVersions) {
+          const catalogChanges = pinDenoJsonCatalogs(
+            denoJson,
+            denoCatalogVersions,
+          );
+
+          if (catalogChanges.changes.length > 0) {
+            console.log(`\n${currentDenoJsonFile}:`);
+            logDenoCatalogChanges(
+              catalogChanges.changes,
+              maxNameLength,
+              maxVersionLength,
+              checkMode,
+            );
+          }
+
+          unpinnedCount += catalogChanges.unpinnedCount;
+          totalChecked += catalogChanges.totalCount;
+          denoJsonHasChanges = catalogChanges.hasChanges;
+        }
 
         if (denoJson.imports) {
           let hasChanges = false;
-          let hasOutput = false;
 
           // Determine which version map to use for this deno.json
           const versionsToUse = getVersionsForDenoJson(
@@ -315,9 +353,8 @@ export function runPinCommand(
             },
           );
 
-          if (willHaveChanges && !hasOutput) {
+          if (willHaveChanges && !denoJsonHasChanges) {
             console.log(`\n${currentDenoJsonFile}:`);
-            hasOutput = true;
           }
 
           const {
@@ -340,16 +377,18 @@ export function runPinCommand(
             hasChanges = true;
           }
 
-          if (hasChanges) {
-            if (!checkMode) {
-              const updatedContent = updateDenoJsonContent(
-                denoJsonContent,
-                denoJson,
-              );
-              writeTextFileSync(currentDenoJsonFile, updatedContent);
-            }
-            totalChanges = true;
+          denoJsonHasChanges = denoJsonHasChanges || hasChanges;
+        }
+
+        if (denoJsonHasChanges) {
+          if (!checkMode) {
+            const updatedContent = updateDenoJsonContent(
+              denoJsonContent,
+              denoJson,
+            );
+            writeTextFileSync(currentDenoJsonFile, updatedContent);
           }
+          totalChanges = true;
         }
       }
     }
@@ -625,6 +664,21 @@ function findDenoWorkspaceFiles(
   return denoJsonFiles;
 }
 
+function logDenoCatalogChanges(
+  changes: DenoCatalogChange[],
+  maxNameLength: number,
+  maxVersionLength: number,
+  checkMode = false,
+): void {
+  for (const change of changes) {
+    const paddedName = change.name.padEnd(maxNameLength);
+    const paddedVersion = change.oldVersion.padEnd(maxVersionLength);
+    const oldVersion = checkMode ? red(paddedVersion) : gray(paddedVersion);
+    const newVersion = green(change.newVersion);
+    console.log(`   ${paddedName}: ${oldVersion} -> ${newVersion}`);
+  }
+}
+
 function pinDependencies(
   deps: Record<string, string>,
   lockedVersions: Map<string, string>,
@@ -765,6 +819,26 @@ function calculateMaxLengths(
         maxNameLength = Math.max(maxNameLength, name.length);
         if (shouldPinVersion(version)) {
           maxVersionLength = Math.max(maxVersionLength, version.length);
+        }
+      }
+    }
+
+    if (denoJson.catalog) {
+      for (const [name, version] of Object.entries(denoJson.catalog)) {
+        maxNameLength = Math.max(maxNameLength, name.length);
+        if (shouldPinVersion(version)) {
+          maxVersionLength = Math.max(maxVersionLength, version.length);
+        }
+      }
+    }
+
+    if (denoJson.catalogs) {
+      for (const catalog of Object.values(denoJson.catalogs)) {
+        for (const [name, version] of Object.entries(catalog)) {
+          maxNameLength = Math.max(maxNameLength, name.length);
+          if (shouldPinVersion(version)) {
+            maxVersionLength = Math.max(maxVersionLength, version.length);
+          }
         }
       }
     }
