@@ -2,7 +2,7 @@
 import denoPlugin from "@deno/rolldown-plugin";
 import { build } from "tsdown";
 
-await Deno.remove("./bin").catch(() => { });
+await Deno.remove("./bin").catch(() => {});
 
 await build({
   config: false,
