@@ -25,7 +25,7 @@
     "@std/jsonc": "jsr:@std/jsonc@1.0.2",
     "@valibot/valibot": "jsr:@valibot/valibot@1.4.1",
     "arkregex": "npm:arkregex@0.0.5",
-    "tsdown": "npm:tsdown@0.22.1"
+    "tsdown": "npm:tsdown@0.22.3"
   },
   "exclude": [
     "testdata/*"
