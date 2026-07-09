@@ -22,10 +22,10 @@
     "jsr:@std/io@0.225": "0.225.3",
     "jsr:@std/json@^1.0.2": "1.0.2",
     "jsr:@std/jsonc@1.0.2": "1.0.2",
-    "jsr:@std/path@1": "1.1.5",
-    "jsr:@std/path@1.1.5": "1.1.5",
-    "jsr:@std/path@^1.1.1": "1.1.5",
-    "jsr:@std/path@^1.1.5": "1.1.5",
+    "jsr:@std/path@1": "1.1.6",
+    "jsr:@std/path@1.1.6": "1.1.6",
+    "jsr:@std/path@^1.1.1": "1.1.6",
+    "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/semver@1.0.8": "1.0.8",
     "jsr:@std/yaml@1.1.1": "1.1.1",
     "jsr:@valibot/valibot@1.4.1": "1.4.1",
@@ -123,8 +123,8 @@
         "jsr:@std/json"
       ]
     },
-    "@std/path@1.1.5": {
-      "integrity": "ccea00982ea28c36becaf6e62f855406c76a8c32d462f66f415bbb7d83a271bc",
+    "@std/path@1.1.6": {
+      "integrity": "c68485c2a4dfbb5ae3cc74fae4e8c4e5d874cf8a8ed12927917235c758b46cbe",
       "dependencies": [
         "jsr:@std/internal@^1.0.14"
       ]
@@ -501,7 +501,7 @@
       "jsr:@std/cli@1.0.30",
       "jsr:@std/fs@1.0.24",
       "jsr:@std/jsonc@1.0.2",
-      "jsr:@std/path@1.1.5",
+      "jsr:@std/path@1.1.6",
       "jsr:@std/semver@1.0.8",
       "jsr:@std/yaml@1.1.1",
       "jsr:@valibot/valibot@1.4.1",
