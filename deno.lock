@@ -27,7 +27,7 @@
     "jsr:@std/path@^1.1.1": "1.1.6",
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/semver@1.0.8": "1.0.8",
-    "jsr:@std/yaml@1.1.1": "1.1.1",
+    "jsr:@std/yaml@1.1.2": "1.1.2",
     "jsr:@valibot/valibot@1.4.1": "1.4.1",
     "npm:arkregex@0.0.5": "0.0.5",
     "npm:tsdown@0.22.3": "0.22.3"
@@ -132,8 +132,8 @@
     "@std/semver@1.0.8": {
       "integrity": "dc830e8b8b6a380c895d53fbfd1258dc253704ca57bbe1629ac65fd7830179b7"
     },
-    "@std/yaml@1.1.1": {
-      "integrity": "a57665ecf3d17b926380593a56625d8a10cc7281802f1e993b5ebc94a48e71f8"
+    "@std/yaml@1.1.2": {
+      "integrity": "de612653c036749ba2044165e316f52412b0f0698afffb7ee80b5331d6d2abae"
     },
     "@valibot/valibot@1.4.1": {
       "integrity": "9be12a3f73f3fd00fa44ae189bc1bb3ab4d9088ec2e32a6ab370ae4fca29ee6e"
@@ -503,7 +503,7 @@
       "jsr:@std/jsonc@1.0.2",
       "jsr:@std/path@1.1.6",
       "jsr:@std/semver@1.0.8",
-      "jsr:@std/yaml@1.1.1",
+      "jsr:@std/yaml@1.1.2",
       "jsr:@valibot/valibot@1.4.1",
       "npm:arkregex@0.0.5",
       "npm:tsdown@0.22.3"
