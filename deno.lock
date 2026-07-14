@@ -7,13 +7,13 @@
     "jsr:@david/path@0.3": "0.3.2",
     "jsr:@david/path@~0.3.2": "0.3.2",
     "jsr:@david/shell@~0.5.4": "0.5.4",
-    "jsr:@david/which@0.7": "0.7.0",
+    "jsr:@david/which@0.7": "0.7.1",
     "jsr:@deno/loader@0.3": "0.3.14",
     "jsr:@deno/rolldown-plugin@0.0.10": "0.0.10",
     "jsr:@ryu/enogu@0.7.0": "0.7.0",
     "jsr:@std/assert@1.0.19": "1.0.19",
     "jsr:@std/bytes@^1.0.6": "1.0.6",
-    "jsr:@std/cli@1.0.30": "1.0.30",
+    "jsr:@std/cli@1.0.32": "1.0.32",
     "jsr:@std/fmt@1": "1.0.10",
     "jsr:@std/fmt@^1.0.10": "1.0.10",
     "jsr:@std/fs@1.0.24": "1.0.24",
@@ -63,8 +63,8 @@
         "jsr:@std/path@1"
       ]
     },
-    "@david/which@0.7.0": {
-      "integrity": "2e7517b28ecd2c99afe70284f2660f2c11548e5b684fa751889f105e0e4f8fe5"
+    "@david/which@0.7.1": {
+      "integrity": "dbc4d2f275650964f7c37a7719f693fac3a836b286d13ec25c2543364cc62d49"
     },
     "@deno/loader@0.3.14": {
       "integrity": "97bc63a6cc2d27a60bcdc953f588c5213331d866d44212eebb24cebfb9b011ca"
@@ -88,8 +88,8 @@
     "@std/bytes@1.0.6": {
       "integrity": "f6ac6adbd8ccd99314045f5703e23af0a68d7f7e58364b47d2c7f408aeb5820a"
     },
-    "@std/cli@1.0.30": {
-      "integrity": "769446536522d0417d7127ebcabcafac1ab0ce6766d0eb3fca1d36326fe98d13",
+    "@std/cli@1.0.32": {
+      "integrity": "188b3a100d6202d64e3f5bd3d799c7fa4f6d77f92cc65eb7f641c1fa0aa92a66",
       "dependencies": [
         "jsr:@std/fmt@^1.0.10",
         "jsr:@std/internal@^1.0.14"
@@ -498,7 +498,7 @@
       "jsr:@deno/rolldown-plugin@0.0.10",
       "jsr:@ryu/enogu@0.7.0",
       "jsr:@std/assert@1.0.19",
-      "jsr:@std/cli@1.0.30",
+      "jsr:@std/cli@1.0.32",
       "jsr:@std/fs@1.0.24",
       "jsr:@std/jsonc@1.0.2",
       "jsr:@std/path@1.1.6",
