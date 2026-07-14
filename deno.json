@@ -21,7 +21,7 @@
     "@std/fs": "jsr:@std/fs@1.0.24",
     "@std/path": "jsr:@std/path@1.1.6",
     "@std/semver": "jsr:@std/semver@1.0.8",
-    "@std/yaml": "jsr:@std/yaml@1.1.1",
+    "@std/yaml": "jsr:@std/yaml@1.1.2",
     "@std/jsonc": "jsr:@std/jsonc@1.0.2",
     "@valibot/valibot": "jsr:@valibot/valibot@1.4.1",
     "arkregex": "npm:arkregex@0.0.8",
