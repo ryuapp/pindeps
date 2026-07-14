@@ -8,6 +8,6 @@
   "bin": "./bin",
   "files": ["bin"],
   "engines": {
-    "node": ">=20.16.0"
+    "node": ">=22.12.0"
   }
 }
