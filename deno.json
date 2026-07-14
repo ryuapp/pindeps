@@ -4,7 +4,7 @@
     "test": "deno test --unstable-raw-imports --parallel src/",
     "test:e2e": "deno test -WRE --allow-run --parallel e2e/",
     "typecheck": "deno check . --unstable-raw-imports --unstable-tsgo",
-    "build": "deno run -WRES --allow-ffi scripts/build.ts",
+    "build": "deno run -WRES -N=jsr.io --allow-ffi scripts/build.ts",
     "fix": "deno fmt && deno lint --fix"
   },
   "fmt": {
