@@ -29,7 +29,7 @@
     "jsr:@std/semver@1.0.8": "1.0.8",
     "jsr:@std/yaml@1.1.2": "1.1.2",
     "jsr:@valibot/valibot@1.4.1": "1.4.1",
-    "npm:arkregex@0.0.5": "0.0.5",
+    "npm:arkregex@0.0.8": "0.0.8",
     "npm:tsdown@0.22.3": "0.22.3"
   },
   "jsr": {
@@ -140,8 +140,8 @@
     }
   },
   "npm": {
-    "@ark/util@0.56.0": {
-      "integrity": "sha512-BghfRC8b9pNs3vBoDJhcta0/c1J1rsoS1+HgVUreMFPdhz/CRAKReAu57YEllNaSy98rWAdY1gE+gFup7OXpgA=="
+    "@ark/util@0.56.2": {
+      "integrity": "sha512-9kU2sUE38FZEGG7l3hamYMBieLYEJh2L1mrYD2eXpT+78EnQSV1bhjxJhnxGBMSTbtwpBSDNSK+K60WvaI/DTQ=="
     },
     "@babel/generator@8.0.0": {
       "integrity": "sha512-NT9NrVwJsbSV6Y2FSstWa71EETOnzrjkL5/wX3D2mYHtKM+qvqB1DvR4D0Setb/gDBsHzRICifwEWMO8CnTF6g==",
@@ -327,8 +327,8 @@
     "ansis@4.3.1": {
       "integrity": "sha512-BJ8/l4R5LRE7hW9WdSuGYrLSHi2ynxeFpDFbH0K/CgNeY/tyhk+vO6TYxXC5r5CpUhNVX310xzPsN/H9lCdfOA=="
     },
-    "arkregex@0.0.5": {
-      "integrity": "sha512-ncYjBdLlh5/QnVsAA8De16Tc9EqmYM7y/WU9j+236KcyYNUXogpz3sC4ATIZYzzLxwI+0sEOaQLEmLmRleaEXw==",
+    "arkregex@0.0.8": {
+      "integrity": "sha512-PJcx6G1kQTgLKPUbeYlYecDRaKq15AMSGVajlKFYWlPeJRQL+j3dKE6tyMs40HZ99djS1l9Vhl3ezAHy9JBIqQ==",
       "dependencies": [
         "@ark/util"
       ]
@@ -505,7 +505,7 @@
       "jsr:@std/semver@1.0.8",
       "jsr:@std/yaml@1.1.2",
       "jsr:@valibot/valibot@1.4.1",
-      "npm:arkregex@0.0.5",
+      "npm:arkregex@0.0.8",
       "npm:tsdown@0.22.3"
     ]
   }
