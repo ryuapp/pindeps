@@ -3,7 +3,7 @@
   "specifiers": {
     "jsr:@david/console-static-text@~0.3.4": "0.3.4",
     "jsr:@david/dax@0.48.5": "0.48.5",
-    "jsr:@david/jsonc-morph@0.3.4": "0.3.4",
+    "jsr:@david/jsonc-morph@0.3.5": "0.3.5",
     "jsr:@david/path@0.3": "0.3.2",
     "jsr:@david/path@~0.3.2": "0.3.2",
     "jsr:@david/shell@~0.5.4": "0.5.4",
@@ -46,8 +46,8 @@
         "jsr:@std/fmt@1"
       ]
     },
-    "@david/jsonc-morph@0.3.4": {
-      "integrity": "a4af7c80b3c233d3856da1e9f2009d251867bee351fea016b22b67d6291c3455"
+    "@david/jsonc-morph@0.3.5": {
+      "integrity": "c60b33ba2e3add2c2bda45d83b0a029119cbaa09175f9a494c643a2180a15598"
     },
     "@david/path@0.3.2": {
       "integrity": "f25aaa3de4d3b9edfe25ca5edf15e3014fee7df4f77d64327e5300c27c1a0497"
@@ -494,7 +494,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@david/dax@0.48.5",
-      "jsr:@david/jsonc-morph@0.3.4",
+      "jsr:@david/jsonc-morph@0.3.5",
       "jsr:@deno/rolldown-plugin@0.0.10",
       "jsr:@ryu/enogu@0.7.0",
       "jsr:@std/assert@1.0.19",
